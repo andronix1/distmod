@@ -45,6 +45,17 @@ DEFINE_BENCH_PD(7, 0.2, e/5,           5 * pow(log(5 * u), 4) / u,              
 #define benchs_count 7
 const bench_info_t *benchs[benchs_count] = { &bi_1, &bi_2, &bi_3, &bi_4, &bi_5, &bi_6, &bi_7 };
 
+typedef struct {
+    edsrm_cache_t cache;
+    double (*pd)(double);
+    uniform_t uni_gen;
+    void *uni_arg;
+} full_edsrm_t;
+
+double edsrm_full_gen(full_edsrm_t *edsrm) {
+    return edsrm_generate(edsrm->pd, edsrm->uni_gen, edsrm->uni_arg, &edsrm->cache);
+}
+
 void run_bi_test(bench_info_t *bi, uniform_t uni_gen, void *uni_arg, long long count) {
     printf("%d). testing %s...\n", bi->idx, bi->name);
     double (*pd)(double u) = bi->distr;
@@ -55,11 +66,19 @@ void run_bi_test(bench_info_t *bi, uniform_t uni_gen, void *uni_arg, long long c
         .size = 330
     };
 
-    edsrm_cache_t cache;
+    edsrm_cache_t cache; 
     if (!edsrm_monotonous_create(&cache, dbd_prob_eq, &info)) {
         printf("edsrm_monotonous_create error!\n");
         exit(1);
     }
+
+    full_edsrm_t edsrm = {
+        .pd = bi->distr,
+        .uni_gen = uni_gen,
+        .uni_arg = uni_arg
+    };
+    print_hist(10000, 10, 30, edsrm_full_gen, &edsrm);
+
     TIME_BENCHMARK("edsrm", {
         edsrm_generate(pd, uni_gen, uni_arg, &cache);
     }, count);
@@ -91,57 +110,52 @@ void run_benchmark(long long count) {
     }, count)
 }
 
-void print_hist(int gens_count, int hist_cols, int hist_len, double (*gen)(double (*)(), uniform_t, void*, void*), double (*pd)(), void *gen_arg) {
-    multiplicative_rand_gen_t multiplicative = multiplicative_rand_gen_create();
+void print_hist(int gens_count, int hist_cols, int hist_len, double (*gen)(void*), void *gen_arg) {
     double *gens = malloc(sizeof(double) * gens_count);
-    double min_val = 10000;
-    double max_val = -10000;
-    printf("%f\n", max_val);
-    printf("%f\n", min_val);
+    double min_val = __DBL_MAX__;
+    double max_val = -__DBL_MAX__;
     for (int i = 0; i < gens_count; i++) {
-        double val = gen(pd, multiplicative_rand_gen_generate, &multiplicative, gen_arg);
+        double val = gen(gen_arg);
         gens[i] = val;
         if (val < min_val) min_val = val;
         if (val > max_val) max_val = val;
     }
-    printf("%f\n", max_val);
-    printf("%f\n", min_val);
+    printf("(%f; %f)\n", min_val, max_val);
     int *hist = malloc(sizeof(int) * hist_cols);
     memset(hist, 0, sizeof(int) * hist_cols);
 
     for (int i = 0; i < gens_count; i++) {
-        hist[(int)((gens[i] - min_val) / (max_val - min_val) * (hist_cols - 1))]++;
+        hist[(int)((gens[i] - min_val) / (max_val - min_val) * hist_cols)]++;
+    }
+    free(gens);
+
+    int max_hist = 0;
+    for (int i = 0; i < hist_cols; i++) {
+        if (max_hist < hist[i]) max_hist = hist[i];
     }
 
     for (int i = 0; i < hist_cols; i++) {
-        for (int j = 0; j < hist[i] / hist_len; j++) {
+        for (int j = 0; j < hist[i] * hist_len / max_hist; j++) {
             putc('*', stdout);
         }
         putc('\n', stdout);
     }
 
     free(hist);
-    free(gens);
 }
 
 int main() {
-    bench_info_t *bi = benchs[0];
-
-    edsrm_cache_pd_info_t info = {
-        .a = bi->a,
-        .b = bi->b,
-        .pd = bi->distr,
-        .size = 330
-    };
-
-    edsrm_cache_t cache;
-    if (!edsrm_monotonous_create(&cache, dbd_prob_eq, &info)) {
-        printf("edsrm_monotonous_create error!\n");
-        exit(1);
+    {
+        printf("multiplicative generator distribution: ");
+        multiplicative_rand_gen_t mrd = multiplicative_rand_gen_create();
+        print_hist(10000, 10, 30, multiplicative_rand_gen_generate, &mrd);
     }
-    print_hist(100000, 10, 20, edsrm_generate, bi->distr, &cache);
-    edsrm_cache_free(&cache);
-
+    {
+        printf("mt19937_64_t generator distribution: ");
+        mt19937_64_t mtrd;
+        mt19937_64_init(&mtrd, clock());
+        print_hist(10000, 10, 30, mt19937_64_generate, &mtrd);
+    }
     run_benchmark(10000000);
     return 1;
 }

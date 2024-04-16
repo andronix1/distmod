@@ -2,9 +2,12 @@
 
 bool edsrm_cache_init(edsrm_cache_t *result, double du, edsrm_cache_pd_info_t *info) {
     result->segments = malloc(sizeof(edsrm_cache_segment_t) * info->size);
+    result->size = info->size;
     
     double pda = info->pd(info->a), pdb = info->pd(info->b);
     bool rising = pda < pdb;
+
+    result->rising = rising;
 
     double u = rising ? info->b : info->a;
     double segment_area = du * info->pd(u);
