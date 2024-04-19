@@ -1,6 +1,6 @@
 #include "prob_eq/dbd.h"
 
-bool dbd_prob_eq(double *value, bool (*overflow)(double, void*), void *arg) {
+bool dbd_prob_eq(double *value, prob_eq_overflow_t overflow, void *arg) {
     double result = *value;
     double delta = 1.0;
 

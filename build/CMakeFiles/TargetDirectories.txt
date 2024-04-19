@@ -1,5 +1,0 @@
-/home/andronix1/projects/distrand/build/CMakeFiles/distrand-lib-objects.dir
-/home/andronix1/projects/distrand/build/CMakeFiles/distrand-lib.dir
-/home/andronix1/projects/distrand/build/CMakeFiles/distrand-demo.dir
-/home/andronix1/projects/distrand/build/CMakeFiles/edit_cache.dir
-/home/andronix1/projects/distrand/build/CMakeFiles/rebuild_cache.dir

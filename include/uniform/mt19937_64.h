@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <malloc.h>
 
 #define NN 312
 #define MM 156
@@ -9,9 +10,14 @@
 #define LM 0x7FFFFFFFULL
 
 typedef struct {
-    uint64_t mt[NN];
-    int mti;
-} mt19937_64_t;
+    uint64_t *mt;
+    uint64_t mti;
+} mt19937_t;
 
-void mt19937_64_init(mt19937_64_t* gen, uint64_t seed);
-double mt19937_64_generate(mt19937_64_t* gen);
+typedef struct {
+    uint64_t seed;
+} mt19937_cfg_t;
+
+void mt19937_64_init(mt19937_t* gen, uint64_t seed);
+double mt19937_64_generate(mt19937_t* gen);
+double mt19937_64_free(mt19937_t* gen);

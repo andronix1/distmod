@@ -1,1 +1,0 @@
-/usr/bin/cc "CMakeFiles/distrand-demo.dir/demo.c.o" -o distrand-demo  -lm libdistrand-lib.a 

@@ -1,13 +1,14 @@
 #include "uniform/mt19937_64.h"
 
-void mt19937_64_init(mt19937_64_t* gen, uint64_t seed) {
+void mt19937_64_init(mt19937_t* gen, uint64_t seed) {
+    gen->mt = calloc(NN, sizeof(uint64_t));
     gen->mt[0] = seed;
     for (int i = 1; i < NN; i++) {
         gen->mt[i] =  (6364136223846793005ULL * (gen->mt[i - 1] ^ (gen->mt[i-1] >> 62)) + i);
     }
 }
 
-double mt19937_64_generate(mt19937_64_t* gen) {
+double mt19937_64_generate(mt19937_t* gen) {
     int i;
     uint64_t x;
 
@@ -27,7 +28,6 @@ double mt19937_64_generate(mt19937_64_t* gen) {
 
         gen->mti = 0;
     }
-
     x = gen->mt[gen->mti++];
 
     x ^= (x >> 29) & 0x5555555555555555ULL;
@@ -36,4 +36,8 @@ double mt19937_64_generate(mt19937_64_t* gen) {
     x ^= (x >> 43);
 
     return (x >> 11) / 9007199254740992.0;
+}
+
+double mt19937_64_free(mt19937_t* gen) {
+    free(gen->mt);
 }

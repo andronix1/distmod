@@ -1,2 +1,0 @@
-/usr/bin/ar qc libdistrand-lib.a "CMakeFiles/distrand-lib-objects.dir/src/distributed/edsrm/cache.c.o" "CMakeFiles/distrand-lib-objects.dir/src/distributed/edsrm/generate.c.o" "CMakeFiles/distrand-lib-objects.dir/src/distributed/edsrm/monotonous.c.o" "CMakeFiles/distrand-lib-objects.dir/src/prob_eq/dbd.c.o" "CMakeFiles/distrand-lib-objects.dir/src/uniform/mt19937_64.c.o" "CMakeFiles/distrand-lib-objects.dir/src/uniform/multiplicative.c.o"
-/usr/bin/ranlib libdistrand-lib.a
