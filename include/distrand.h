@@ -7,3 +7,6 @@
 #include "distributed/edsrm/mnt.h"
 #include "prob_eq/dbd.h"
 #include "prob_eq/types.h"
+
+extern inline double uniform_gen(uniform_callable_t *uc);
+extern inline bool edsrm_mnt_try_generate(double *result, double first_gen, uniform_callable_t *uc, edsrm_mnt_t *cache);

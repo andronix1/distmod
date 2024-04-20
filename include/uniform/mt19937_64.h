@@ -11,7 +11,7 @@
 
 typedef struct {
     uint64_t *mt;
-    uint64_t mti;
+    int mti;
 } mt19937_t;
 
 typedef struct {
