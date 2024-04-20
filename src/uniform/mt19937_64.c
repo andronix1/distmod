@@ -38,6 +38,6 @@ double mt19937_64_generate(mt19937_t* gen) {
     return (x >> 11) / 9007199254740992.0;
 }
 
-double mt19937_64_free(mt19937_t* gen) {
+void mt19937_64_free(mt19937_t* gen) {
     free(gen->mt);
 }
