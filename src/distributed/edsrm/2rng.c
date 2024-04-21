@@ -22,24 +22,26 @@ bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg) {
         return false;
     }
     edsrm_mnt_cache_segment_t *ls = cache->lcache.segments;
-    cache->left_area = ls->v_max * ls->u_width;
+    double left_area = ls->v_max * ls->u_width;
     edsrm_mnt_cache_segment_t *rs = cache->rcache.segments;
-    cache->right_area = rs->v_max * rs->u_width;
-    cache->full_area = cache->left_area + cache->right_area;
+    double right_area = rs->v_max * rs->u_width;
+    double full_area = left_area + right_area;
+    cache->leftp = left_area / full_area;
+    cache->rightp = right_area / full_area;
     return true;
 }
 
 double edsrm_2rng_generate(edsrm_2rng_t *cache, uniform_callable_t *uc) {
     double res;
     while (true) {
-        double u_gen = uniform_gen(uc) * cache->full_area;
+        double u_gen = uniform_gen(uc);
         edsrm_mnt_t *mnt_cache;
-        if (u_gen < cache->left_area) {
+        if (u_gen < cache->leftp) {
             mnt_cache = &cache->lcache;
-            u_gen /= cache->left_area;
+            u_gen /= cache->leftp;
         } else {
             mnt_cache = &cache->rcache;
-            u_gen = (u_gen - cache->left_area) / cache->right_area;
+            u_gen = (u_gen - cache->leftp) / cache->rightp;
         }
         if (edsrm_mnt_try_generate(&res, u_gen, uc, mnt_cache)) {
             return res;

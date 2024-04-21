@@ -6,7 +6,7 @@
 
 typedef struct {
     edsrm_mnt_t rcache, lcache;
-    double left_area, right_area, full_area;
+    double leftp, rightp;
 } edsrm_2rng_t;
 
 typedef struct {
