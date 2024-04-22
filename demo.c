@@ -133,7 +133,7 @@ void run_benchmark(long long count) {
     multiplicative_rand_gen_t multiplicative = multiplicative_rand_gen_create();
     bi_result_t mul_res[benchs_count];
     gen_callable_t mul_gc = {
-        .gen = (uniform_t)multiplicative_rand_gen_generate,
+        .gen = (gen_t)multiplicative_rand_gen_generate,
         .arg = &multiplicative
     };
     run_benchs_for(mul_res, &mul_gc, count);
@@ -142,7 +142,7 @@ void run_benchmark(long long count) {
     mt19937_64_init(&mtrd, 10);
     bi_result_t mt19937_res[benchs_count];
     gen_callable_t mtrd_gc = {
-        .gen = (uniform_t)mt19937_64_generate,
+        .gen = (gen_t)mt19937_64_generate,
         .arg = &mtrd
     };
     run_benchs_for(mt19937_res, &mtrd_gc, count);
@@ -162,7 +162,7 @@ void run_benchmark(long long count) {
     // }
 }
 
-void print_hist(long gens_count, long hist_cols, long hist_len, uniform_t gen, void *gen_arg) {
+void print_hist(long gens_count, long hist_cols, long hist_len, gen_t gen, void *gen_arg) {
     double *gens = calloc(gens_count, sizeof(double));
     double min_val = __DBL_MAX__;
     double max_val = -__DBL_MAX__;
@@ -203,7 +203,7 @@ void run_uniform_benchmark(long count) {
     {
         printf("multiplicative generator distribution: ");
         multiplicative_rand_gen_t mrd = multiplicative_rand_gen_create();
-        print_hist(hist_gens, 10, 30, (uniform_t)multiplicative_rand_gen_generate, &mrd);
+        print_hist(hist_gens, 10, 30, (gen_t)multiplicative_rand_gen_generate, &mrd);
 
         TIME_BENCHMARK("multiplicative", {
             multiplicative_rand_gen_generate(&mrd);
@@ -213,7 +213,7 @@ void run_uniform_benchmark(long count) {
         printf("mt19937_t generator distribution: ");
         mt19937_t mtrd;
         mt19937_64_init(&mtrd, 0);
-        print_hist(hist_gens, 10, 30, (uniform_t)mt19937_64_generate, &mtrd);
+        print_hist(hist_gens, 10, 30, (gen_t)mt19937_64_generate, &mtrd);
 
         TIME_BENCHMARK("mt19937_t", {
             mt19937_64_generate(&mtrd);

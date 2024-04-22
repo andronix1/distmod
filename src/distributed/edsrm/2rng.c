@@ -34,7 +34,7 @@ bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg) {
 double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *gc) {
     double res;
     while (true) {
-        double u_gen = gen_call(gc) * cache->full_area;
+        double u_gen = gen_call(gc);
         edsrm_mnt_t *mnt_cache;
         if (u_gen < cache->leftp) {
             mnt_cache = &cache->lcache;
