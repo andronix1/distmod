@@ -69,8 +69,8 @@ void edsrm_mnt_free(edsrm_mnt_t *cache) {
     free(cache->segments);
 }
 
-double edsrm_mnt_generate(edsrm_mnt_t *cache, uniform_callable_t *uc) {
+double edsrm_mnt_generate(edsrm_mnt_t *cache, gen_callable_t *gc) {
     double result;
-    while (!edsrm_mnt_try_generate(&result, uniform_gen(uc), uc, cache));
+    while (!edsrm_mnt_try_generate(&result, gen_call(gc), gc, cache));
     return result;
 }

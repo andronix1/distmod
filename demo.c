@@ -62,27 +62,27 @@ const bench_info_t *benchs[benchs_count] = { &bi_1, &bi_2, &bi_3, &bi_4, &bi_5, 
 
 typedef struct {
     edsrm_mnt_t cache;
-    uniform_callable_t *uc;
+    gen_callable_t *gc;
 } full_edsrm_t;
 
 double edsrm_full_gen(full_edsrm_t *edsrm) {
-    return edsrm_mnt_generate(&edsrm->cache, edsrm->uc);
+    return edsrm_mnt_generate(&edsrm->cache, edsrm->gc);
 }
 
 typedef struct {
     edsrm_2rng_t cache;
-    uniform_callable_t *uc;
+    gen_callable_t *gc;
 } full_edsrm_2rng_t;
 
 double edsrm_2rng_full_gen(full_edsrm_2rng_t *edsrm) {
-    return edsrm_2rng_generate(&edsrm->cache, edsrm->uc);
+    return edsrm_2rng_generate(&edsrm->cache, edsrm->gc);
 }
 
 typedef struct {
     double idm, edsrm;
 } bi_result_t;
 
-void run_bi_test(const bench_info_t *bi, bi_result_t *res, uniform_callable_t *uc, long long count) {
+void run_bi_test(const bench_info_t *bi, bi_result_t *res, gen_callable_t *gc, long long count) {
     printf("%d). measuring %s...\n", bi->idx, bi->name);
     double (*pd)(double u) = bi->distr;
     edsrm_mnt_pd_info_t info = {
@@ -95,7 +95,7 @@ void run_bi_test(const bench_info_t *bi, bi_result_t *res, uniform_callable_t *u
         .pd_info = &info,
         .prob_eq = dbd_prob_eq
     };
-    full_edsrm_t edsrm = { .uc = uc };
+    full_edsrm_t edsrm = { .gc = gc };
     if (!edsrm_mnt_create(&edsrm.cache, &cfg)) {
         printf("edsrm_mnt_create error!\n");
         exit(1);
@@ -103,18 +103,18 @@ void run_bi_test(const bench_info_t *bi, bi_result_t *res, uniform_callable_t *u
     print_hist(hist_gens, 10, 30, edsrm_full_gen, &edsrm);
 
     MEASURE_TIME({
-        edsrm_mnt_generate(&edsrm.cache, uc);
+        edsrm_mnt_generate(&edsrm.cache, gc);
     }, count, res->edsrm);
     double (*ipd)(double u) = bi->distr;
     MEASURE_TIME({
-        ipd(uniform_gen(uc));
+        ipd(gen_call(gc));
     }, count, res->idm);
     edsrm_mnt_free(&edsrm.cache);
 }
 
-void run_benchs_for(bi_result_t *res, uniform_callable_t *uc, long long count) {
+void run_benchs_for(bi_result_t *res, gen_callable_t *gc, long long count) {
     for (int i = 0; i < benchs_count; i++) {
-        run_bi_test(benchs[i], &res[i], uc, count);
+        run_bi_test(benchs[i], &res[i], gc, count);
     }
 }
 
@@ -132,20 +132,20 @@ int imax(int a, int b) { return a > b ? a : b; }
 void run_benchmark(long long count) {
     multiplicative_rand_gen_t multiplicative = multiplicative_rand_gen_create();
     bi_result_t mul_res[benchs_count];
-    uniform_callable_t mul_uc = {
+    gen_callable_t mul_gc = {
         .gen = (uniform_t)multiplicative_rand_gen_generate,
         .arg = &multiplicative
     };
-    run_benchs_for(mul_res, &mul_uc, count);
+    run_benchs_for(mul_res, &mul_gc, count);
 
     mt19937_t mtrd;
     mt19937_64_init(&mtrd, 10);
     bi_result_t mt19937_res[benchs_count];
-    uniform_callable_t mtrd_uc = {
+    gen_callable_t mtrd_gc = {
         .gen = (uniform_t)mt19937_64_generate,
         .arg = &mtrd
     };
-    run_benchs_for(mt19937_res, &mtrd_uc, count);
+    run_benchs_for(mt19937_res, &mtrd_gc, count);
     mt19937_64_free(&mtrd);
 
     printf("OPEN CSV FILE!!!!\n");

@@ -1,3 +1,11 @@
 #pragma once
 
 typedef double (*dfunc_t)(double);
+
+typedef double(*gen_t)(void*);
+typedef struct {
+    gen_t gen;
+    void *arg;
+} gen_callable_t;
+
+inline double gen_call(gen_callable_t *gc) { return gc->gen(gc->arg); }

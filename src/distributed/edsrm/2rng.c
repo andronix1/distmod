@@ -31,10 +31,10 @@ bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg) {
     return true;
 }
 
-double edsrm_2rng_generate(edsrm_2rng_t *cache, uniform_callable_t *uc) {
+double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *gc) {
     double res;
     while (true) {
-        double u_gen = uniform_gen(uc);
+        double u_gen = gen_call(gc) * cache->full_area;
         edsrm_mnt_t *mnt_cache;
         if (u_gen < cache->leftp) {
             mnt_cache = &cache->lcache;
@@ -43,7 +43,7 @@ double edsrm_2rng_generate(edsrm_2rng_t *cache, uniform_callable_t *uc) {
             mnt_cache = &cache->rcache;
             u_gen = (u_gen - cache->leftp) / cache->rightp;
         }
-        if (edsrm_mnt_try_generate(&res, u_gen, uc, mnt_cache)) {
+        if (edsrm_mnt_try_generate(&res, u_gen, gc, mnt_cache)) {
             return res;
         }
     }

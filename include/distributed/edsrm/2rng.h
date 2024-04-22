@@ -16,6 +16,6 @@ typedef struct {
     uint32_t lsize, rsize;
 } edsrm_2rng_cfg_t;
 
+double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *uc);
 bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg);
-double edsrm_2rng_generate(edsrm_2rng_t *cache, uniform_callable_t *uc);
 void edsrm_2rng_free(edsrm_2rng_t *cache);
