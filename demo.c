@@ -100,7 +100,11 @@ void run_bi_test(const bench_info_t *bi, bi_result_t *res, gen_callable_t *gc, l
         printf("edsrm_mnt_create error!\n");
         exit(1);
     }
-    print_hist(hist_gens, 10, 30, edsrm_full_gen, &edsrm);
+    gen_callable_t egc = {
+        .gen = edsrm_full_gen,
+        .arg = &edsrm
+    };
+    print_hist(hist_gens, 10, 30, &egc);
 
     MEASURE_TIME({
         edsrm_mnt_generate(&edsrm.cache, gc);
@@ -162,12 +166,12 @@ void run_benchmark(long long count) {
     // }
 }
 
-void print_hist(long gens_count, long hist_cols, long hist_len, gen_t  gen, void *gen_arg) {
+void print_hist(long gens_count, long hist_cols, long hist_len, gen_callable_t *gc) {
     double *gens = calloc(gens_count, sizeof(double));
     double min_val = __DBL_MAX__;
     double max_val = -__DBL_MAX__;
     for (int i = 0; i < gens_count; i++) {
-        double val = gen(gen_arg);
+        double val = gen_call(gc);
         gens[i] = val;
         if (val < min_val) min_val = val;
         if (val > max_val) max_val = val;
@@ -203,7 +207,11 @@ void run_uniform_benchmark(long count) {
     {
         printf("multiplicative generator distribution: ");
         multiplicative_rand_gen_t mrd = multiplicative_rand_gen_create();
-        print_hist(hist_gens, 10, 30, (gen_t )multiplicative_rand_gen_generate, &mrd);
+        gen_callable_t gc = {
+            .arg = &mrd,
+            .gen = multiplicative_rand_gen_generate
+        };
+        print_hist(hist_gens, 10, 30, &gc);
 
         TIME_BENCHMARK("multiplicative", {
             multiplicative_rand_gen_generate(&mrd);
@@ -213,7 +221,11 @@ void run_uniform_benchmark(long count) {
         printf("mt19937_t generator distribution: ");
         mt19937_t mtrd;
         mt19937_64_init(&mtrd, 0);
-        print_hist(hist_gens, 10, 30, (gen_t )mt19937_64_generate, &mtrd);
+        gen_callable_t gc = {
+            .arg = &mtrd,
+            .gen = mt19937_64_generate
+        };
+        print_hist(hist_gens, 10, 30, &gc);
 
         TIME_BENCHMARK("mt19937_t", {
             mt19937_64_generate(&mtrd);
@@ -223,7 +235,7 @@ void run_uniform_benchmark(long count) {
 }
 
 int main() {
-    long base_count = 100000000;
+    long base_count = 10000000;
     run_uniform_benchmark(base_count * 10);
     run_benchmark(base_count);
     return 1;
