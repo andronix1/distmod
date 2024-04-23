@@ -2,9 +2,9 @@
 
 #include <time.h>
 
-#define bench(output, count, body) { \
-        clock_t s = clock(); \
+#define MEASURE_TIME(output, count, body) { \
+        clock_t start = clock(); \
         for (int i = 0; i < count; i++) body \
-        clock_t e = clock(); \
-        output = (e - s) / (double)CLOCKS_PER_SEC; \
+        clock_t end = clock(); \
+        output = (end - start) / (double)CLOCKS_PER_SEC; \
     }
