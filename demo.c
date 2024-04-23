@@ -152,18 +152,18 @@ void run_benchmark(long long count) {
     run_benchs_for(mt19937_res, &mtrd_gc, count);
     mt19937_64_free(&mtrd);
 
-    printf("OPEN CSV FILE!!!!\n");
-    // printf("distribution | inverse distribution | idm_mul | edsrm_mul | diff_mul | idm_mt19937 | edsrm_mt19937 | diff_mt19937\n");
-    // for (int i = 0; i < benchs_count; i++) {
-    //     const bench_info_t *b = benchs[i];
-    //     bi_result_t *mr = &mul_res[i];
-    //     bi_result_t *mtr = &mt19937_res[i];
-    //     printf("%s | %s | %.2f | %.2f | %.2f | %.2f | %.2f | %.2f\n", 
-    //         b->distr_str, b->idistr_str, 
-    //         mr->idm, mr->edsrm, mr->idm / mr->edsrm,
-    //         mtr->idm, mtr->edsrm, mtr->idm / mtr->edsrm
-    //     );
-    // }
+    printf("SAVE THIS TO CSV FILE!!!!\n");
+    printf("distribution | inverse distribution | idm_mul | edsrm_mul | diff_mul | idm_mt19937 | edsrm_mt19937 | diff_mt19937\n");
+    for (int i = 0; i < benchs_count; i++) {
+        const bench_info_t *b = benchs[i];
+        bi_result_t *mr = &mul_res[i];
+        bi_result_t *mtr = &mt19937_res[i];
+        printf("%s | %s | %.2f | %.2f | %.2f | %.2f | %.2f | %.2f\n", 
+            b->distr_str, b->idistr_str, 
+            mr->idm, mr->edsrm, mr->idm / mr->edsrm,
+            mtr->idm, mtr->edsrm, mtr->idm / mtr->edsrm
+        );
+    }
 }
 
 void print_hist(long gens_count, long hist_cols, long hist_len, gen_callable_t *gc) {
