@@ -9,6 +9,12 @@ bool dbd_prob_eq(double *value, prob_eq_overflow_t overflow, void *arg) {
     }
     while (overflow(result, arg)) {
         result -= delta;
+        if (result < delta) {
+            delta /= 10;
+            if (delta < 10e-18) {
+                return false;
+            }
+        }
     }
     int digit_iters = 0;
     while (true) {

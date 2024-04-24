@@ -1,7 +1,9 @@
 #pragma once
 
 #include <distrand.h>
+#include "hist.h"
 #include "measure_time.h"
+#include "config.h"
 
 typedef enum {
     BI_TYPE_MNT,
@@ -21,10 +23,10 @@ typedef struct {
 
 #define DFUNC(name, expr) double name(double u) { return expr; }
 
-#define DEFINE_BENCH_INFO(idx, from, to, extremumv, pdv, ipdv, type) \
+#define DEFINE_BENCH_INFO(idx, from, to, extremumv, pdv, ipdv, typev) \
     DFUNC(PD_DFUNC_NAME(idx), pdv) \
     DFUNC(IPD_DFUNC_NAME(idx), ipdv) \
-    const bench_info_t bi_##id = { \
+    const bench_info_t bi_##idx = { \
         .id = idx, \
         .a = from, \
         .b = to, \
@@ -32,17 +34,31 @@ typedef struct {
         .pd = PD_DFUNC_NAME(idx), \
         .ipd = IPD_DFUNC_NAME(idx), \
         .ipd_str = #ipdv, \
-        .pd_str = #pdv \
+        .pd_str = #pdv, \
+        .type = typev \
     }
 
 #define DEFINE_BENCH_MNT(idx, a, b, pd, ipd) DEFINE_BENCH_INFO(idx, a, b, 0, pd, ipd, BI_TYPE_MNT)
 #define DEFINE_BENCH_2RNG(idx, a, b, extremum, pd, ipd) DEFINE_BENCH_INFO(idx, a, b, extremum, pd, ipd, BI_TYPE_2RNG)
 
-#define e 2.7182818284590452353602874713526624977572
-#define pi 3.1415926535897932384626433832795028841971
-
 typedef struct { 
     double idm, edsrm;
 } bench_result_t;
 
-bool bi_run(bench_info_t *bi, gen_callable_t *gc, bench_result_t *res, long gens_count);
+typedef bool (*bi_edsrm_try_gen_t)(double*, double, gen_callable_t*, void*);
+typedef double (*bi_edsrm_gen_t)(void*, gen_callable_t*);
+typedef void (*bi_edsrm_free_t)(void*);
+
+typedef struct {
+    void *cache;
+    bi_edsrm_gen_t gen;
+    bi_edsrm_try_gen_t try_gen;
+    bi_edsrm_free_t free;
+} bi_edsrm_info_t;
+
+void bi_edsrm_info_free(bi_edsrm_info_t *info);
+bool bi_create_edsrm(const bench_info_t *bi, bi_edsrm_info_t *info, int m);
+
+bool bi_run(const bench_info_t *bi, gen_callable_t *gc, bench_result_t *res, long gens_count);
+bool bi_edsrm_hist(const bench_info_t *bi, gen_callable_t *gc, long gens_count);
+bool bi_edsrm_misses(const bench_info_t *bi, gen_callable_t *gc, long gens_count, int *result);

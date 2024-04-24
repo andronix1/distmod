@@ -8,4 +8,4 @@ typedef struct {
     void *arg;
 } gen_callable_t;
 
-inline double gen_call(gen_callable_t *gc) { return gc->gen(gc->arg); }
+inline static double gen_call(gen_callable_t *gc) { return gc->gen(gc->arg); }
