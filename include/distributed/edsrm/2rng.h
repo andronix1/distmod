@@ -5,7 +5,7 @@
 #include "types.h"
 
 typedef struct {
-    edsrm_mnt_t rcache, lcache;
+    edsrm_mnt_t *rcache, *lcache;
     double leftp, rightp;
 } edsrm_2rng_t;
 
@@ -19,10 +19,10 @@ typedef struct {
 inline static bool edsrm_2rng_try_generate(double *res, double u_gen, gen_callable_t *gc, edsrm_2rng_t *cache) {
     edsrm_mnt_t *mnt_cache;
     if (u_gen < cache->leftp) {
-        mnt_cache = &cache->lcache;
+        mnt_cache = cache->lcache;
         u_gen /= cache->leftp;
     } else {
-        mnt_cache = &cache->rcache;
+        mnt_cache = cache->rcache;
         u_gen = (u_gen - cache->leftp) / cache->rightp;
     }
     return edsrm_mnt_try_generate(res, u_gen, gc, mnt_cache);

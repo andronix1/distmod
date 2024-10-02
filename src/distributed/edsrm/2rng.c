@@ -11,19 +11,19 @@ bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg) {
         .pd_info = &info,
         .prob_eq = cfg->prob_eq
     };
-    if (!edsrm_mnt_create(&cache->lcache, &mnt_cfg)) {
+    if (!(cache->lcache = edsrm_mnt_create(&mnt_cfg))) {
         return false;
     }
     info.a = cfg->extremum;
     info.b = cfg->b;
     info.size = cfg->lsize;
-    if (!edsrm_mnt_create(&cache->rcache, &mnt_cfg)) {
-        edsrm_mnt_free(&cache->lcache);
+    if (!(cache->rcache = edsrm_mnt_create(&mnt_cfg))) {
+        edsrm_mnt_free(cache->lcache);
         return false;
     }
-    edsrm_mnt_cache_segment_t *ls = cache->lcache.segments;
+    edsrm_mnt_cache_segment_t *ls = cache->lcache->segments;
     double left_area = ls->v_max * ls->u_width;
-    edsrm_mnt_cache_segment_t *rs = cache->rcache.segments;
+    edsrm_mnt_cache_segment_t *rs = cache->rcache->segments;
     double right_area = rs->v_max * rs->u_width;
     double full_area = left_area + right_area;
     cache->leftp = left_area / full_area;
@@ -38,6 +38,6 @@ double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *gc) {
 }
 
 void edsrm_2rng_free(edsrm_2rng_t *cache) {
-    edsrm_mnt_free(&cache->lcache);
-    edsrm_mnt_free(&cache->rcache);
+    edsrm_mnt_free(cache->lcache);
+    edsrm_mnt_free(cache->rcache);
 }

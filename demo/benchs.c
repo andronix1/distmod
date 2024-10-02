@@ -2,7 +2,6 @@
 
 void bi_edsrm_info_free(bi_edsrm_info_t *info) {
     info->free(info->cache);
-    free(info->cache);
 }
 
 bool bi_create_edsrm_mnt(const bench_info_t *bi, bi_edsrm_info_t *info, int m) {
@@ -17,14 +16,32 @@ bool bi_create_edsrm_mnt(const bench_info_t *bi, bi_edsrm_info_t *info, int m) {
         .prob_eq = dbd_prob_eq
     };
 
-    info->cache = malloc(sizeof(edsrm_mnt_t));
-    if (!edsrm_mnt_create(info->cache, &cfg)) {
-        free(info->cache);
+    if (!(info->cache = edsrm_mnt_create(&cfg))) {
         return false;
     }
     info->gen = (bi_edsrm_gen_t)edsrm_mnt_generate;
     info->free = (bi_edsrm_free_t)edsrm_mnt_free;
     info->try_gen = (bi_edsrm_try_gen_t)edsrm_mnt_try_generate;
+    return true;
+}
+
+bool bi_create_ziggurat_mnt(const bench_info_t *bi, bi_edsrm_info_t *info, int m) {
+    ziggurat_mnt_config_t cfg = {
+        .start = bi->a,
+        .end = bi->b,
+        .ipd = bi->pdi,
+        .pd = bi->pd,
+        .prob_eq = dbd_prob_eq,
+        .size = m,
+        .use_ipd_for_gen = true
+    };
+
+    if (!(info->cache = ziggurat_mnt_create(&cfg))) {
+        return false;
+    }
+    info->gen = (bi_edsrm_gen_t)ziggurat_mnt_generate;
+    info->free = (bi_edsrm_free_t)ziggurat_mnt_free;
+    info->try_gen = NULL;
     return true;
 }
 
@@ -51,7 +68,7 @@ bool bi_create_edsrm_2rng(const bench_info_t *bi, bi_edsrm_info_t *info, int m) 
 }
 
 bool bi_create_edsrm(const bench_info_t *bi, bi_edsrm_info_t *info, int m) {
-    return (bi->type == BI_TYPE_MNT ? bi_create_edsrm_mnt : bi_create_edsrm_2rng)(bi, info, m);
+    return (bi->type == BI_TYPE_MNT ? bi_create_ziggurat_mnt : bi_create_edsrm_2rng)(bi, info, m);
 }
 
 bool bi_idm_run(const bench_info_t *bi, gen_callable_t *gc, double *res, long gens_count) {

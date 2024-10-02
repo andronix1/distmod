@@ -7,7 +7,11 @@ file(GLOB_RECURSE LIB_SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.c)
 add_library(distrand-lib-objects OBJECT ${LIB_SRC_FILES})
 target_compile_options(distrand-lib-objects
     PRIVATE
-        -Wall -fPIC -O3 
+        -Wall -fPIC -O3
+)
+target_link_options(distrand-lib-objects
+  PUBLIC
+    LINKER:-Map=foo.map
 )
 include_directories(include)
 

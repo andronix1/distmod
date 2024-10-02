@@ -9,21 +9,22 @@
 #define e 2.7182818284590452353602874713526624977572
 #define pi 3.1415926535897932384626433832795028841971
 
-DEFINE_BENCH_MNT (1,  0,   1,             2 * u,                                    sqrt(u));
-DEFINE_BENCH_MNT (2,  0,   0.69314718056, pow(e, u),                                log(1 + u));               //ln2
-DEFINE_BENCH_MNT (3,  0,   0.8414709848,  1.0 / sqrt(1-u*u),                        sin(u));                   //sin1
-DEFINE_BENCH_MNT (4,  0,   pi/4,          1 / pow(cos(u), 2),                       atan(u));
-DEFINE_BENCH_MNT (5,  0,   pi/2,          cos(u),                                   asin(u));
-DEFINE_BENCH_MNT (6,  0,   1.55740772465, 1.0 / (u * u + 1),                        tan(u));
-DEFINE_BENCH_MNT (7,  0,   1,             (pi + 1) * pow(u, pi),                    pow(u, 1 / (pi + 1)));
-DEFINE_BENCH_MNT (8,  0,   1,             3 * pow(u, 2),                            pow(u, 1 / 3.0));
-DEFINE_BENCH_MNT (9,  0,   1.41421356237, 4 * pow(u, 3) / sqrt(4 * pow(u, 4) + 9),  pow(u * u + 3 * u, 0.25)); //sqrt2
-DEFINE_BENCH_MNT (10, 0.2, e/5,           5 * pow(log(5 * u), 4) / u,               pow(e, pow(u, 0.2)) / 5);
+DEFINE_BENCH_MNT (1,  0,   1,             2 * u,                                    sqrt(u),                   u / 2);
+DEFINE_BENCH_MNT (2,  0,   0.69314718056, pow(e, u),                                log(1 + u),                log(u));               //ln2
+DEFINE_BENCH_MNT (3,  0,   0.8414709848,  1.0 / sqrt(1-u*u),                        sin(u),                    sqrt(1-(1 / u / u)));                   //sin1
+DEFINE_BENCH_MNT (4,  0,   pi/4,          1 / pow(cos(u), 2),                       atan(u),                   acos(sqrt(1 / u)));
+DEFINE_BENCH_MNT (5,  0,   pi/2,          cos(u),                                   asin(u),                   acos(u)); //Z
+DEFINE_BENCH_MNT (6,  0,   1.55740772465, 1.0 / (u * u + 1),                        tan(u),                    sqrt(1 / u - 1)); //Z
+DEFINE_BENCH_MNT (7,  0,   1,             (pi + 1) * pow(u, pi),                    pow(u, 1 / (pi + 1)),      pow(u / (pi + 1), 1 / pi));
+DEFINE_BENCH_MNT (8,  0,   1,             3 * pow(u, 2),                            pow(u, 1 / 3.0),           pow(u / 3, 1 / 2.0));
+DEFINE_BENCH_MNT (9,  0,   1.41421356237, 4 * pow(u, 3) / sqrt(4 * pow(u, 4) + 9),  pow(u * u + 3 * u, 0.25),  1); //Z //sqrt2
+DEFINE_BENCH_MNT (10, 0.2, e/5,           5 * pow(log(5 * u), 4) / u,               pow(e, pow(u, 0.2)) / 5,   1); //Z
 
-DEFINE_BENCH_2RNG(11, -1, 1, 0, 3.0/8*(1+u*u), (pow(sqrt(16*u*u-16*u+5)+4*u-2, 2.0/3)-1)/(sqrt(sqrt(16*u*u-16*u+5)+4*u-2)));
+DEFINE_BENCH_2RNG(11, -1, 1, 0, 3.0/8*(1+u*u), (pow(sqrt(16*u*u-16*u+5)+4*u-2, 2.0/3)-1)/(sqrt(sqrt(16*u*u-16*u+5)+4*u-2)), 1); //Z
 
-#define benchs_count 11
-const bench_info_t *benchs[benchs_count] = { &bi_1, &bi_2, &bi_3, &bi_4, &bi_5, &bi_6, &bi_7, &bi_8, &bi_9, &bi_10, &bi_11 };
+// 5, 6, 9, 10
+#define benchs_count 6
+const bench_info_t *benchs[benchs_count] = { &bi_1, &bi_2, &bi_3, &bi_4, &bi_7, &bi_8 };
 
 typedef struct {
     edsrm_2rng_t *cache;
@@ -103,11 +104,35 @@ int main() {
         return 1;
     }
 
-    multiplicative_rand_gen_t mulrg = multiplicative_rand_gen_create();
+    multiplicative_rand_gen_t *mulrg = multiplicative_rand_gen_create();
     gen_callable_t mul_gc = {
-        .arg = &mulrg,
+        .arg = mulrg,
         .gen = (gen_t)multiplicative_rand_gen_generate
     };
+
+    bi_edsrm_info_t iz;
+    bi_create_ziggurat_mnt(&bi_2, &iz, 200);
+    bi_edsrm_info_t ie;
+    bi_create_edsrm_mnt(&bi_2, &ie, 200);
+        
+    double timez;
+    MEASURE_TIME(timez, 1000000, {
+        iz.gen(iz.cache, &mul_gc);
+    });
+
+    double timee;        
+    MEASURE_TIME(timee, 1000000, {
+        ie.gen(ie.cache, &mul_gc);
+    });
+
+    ziggurat_mnt_t *z = iz.cache;
+    for (int i = 0; i < z->size; i++) {
+        printf("%f ", z->rows[i].u_maj);
+    }
+    printf("\n");
+    printf("%f vs %f with %d per call\n", timez, timee, (z->misses / 1000000));
+
+    return 0;
 
     mt19937_t mtrg;
     mt19937_64_init(&mtrg, 10);
@@ -116,8 +141,8 @@ int main() {
         .gen = (gen_t)mt19937_64_generate
     };
 
-    printf("calculating t(M) for %s...\n", bi_7.ipd_str);
-    t_by_m(&bi_7, &mul_gc, 10, 500, 10, 100);
+    // printf("calculating t(M) for %s...\n", bi_7.ipd_str);
+    // t_by_m(&bi_7, &mul_gc, 10, 500, 10, 100);
 
     for (int i = 0; i < benchs_count; i++) {
         const bench_info_t *bi = benchs[i];
@@ -153,5 +178,6 @@ int main() {
     }
 
     mt19937_64_free(&mtrg);
+    multiplicative_rand_gen_free(mulrg);
     return 0;
 }

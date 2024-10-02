@@ -7,7 +7,7 @@
 #include "types.h"
 
 typedef struct {
-    double u_min, v_max, v_min, u_width;
+    double u_min, v_max, v_start, u_width;
 } edsrm_mnt_cache_segment_t;
 
 typedef struct {
@@ -31,7 +31,7 @@ typedef struct {
 bool edsrm_mnt_is_cache_overflow(double du, edsrm_mnt_pd_info_t *info);
 
 bool edsrm_mnt_from_idu(edsrm_mnt_t *cache, double idu, edsrm_mnt_pd_info_t *info);
-bool edsrm_mnt_create(edsrm_mnt_t *cache, edsrm_mnt_cfg_t *cfg);
+edsrm_mnt_t *edsrm_mnt_create(edsrm_mnt_cfg_t *cfg);
 
 void edsrm_mnt_free(edsrm_mnt_t *cache);
 
@@ -40,7 +40,7 @@ inline static bool edsrm_mnt_try_generate(double *result, double u_gen, gen_call
     edsrm_mnt_cache_segment_t *segment = &cache->segments[col_idx];
     double v = gen_call(gc) * segment->v_max;
     double u = segment->u_min + segment->u_width * (cache->size * u_gen - col_idx);
-    bool is_under_pd = v <= segment->v_min || v <= cache->pd(u);
+    bool is_under_pd = v <= segment->v_start || v <= cache->pd(u);
     if (is_under_pd) {
         *result = u;
     }

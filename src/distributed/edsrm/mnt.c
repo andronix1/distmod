@@ -35,7 +35,7 @@ bool edsrm_mnt_from_idu(edsrm_mnt_t *result, double du, edsrm_mnt_pd_info_t *inf
         edsrm_mnt_cache_segment_t *segment = &result->segments[i];
         segment->u_min = u_min;
         segment->u_width = du;
-        segment->v_min = info->pd(u);
+        segment->v_start = info->pd(u);
         segment->v_max = v_max;
     }
 
@@ -60,13 +60,22 @@ bool edsrm_mnt_is_cache_overflow(double du, edsrm_mnt_pd_info_t *info) {
     return false;
 }
 
-bool edsrm_mnt_create(edsrm_mnt_t *cache, edsrm_mnt_cfg_t *cfg) {
+edsrm_mnt_t *edsrm_mnt_create(edsrm_mnt_cfg_t *cfg) {
     double du = (cfg->pd_info->b - cfg->pd_info->a) / cfg->pd_info->size;
-    return cfg->prob_eq(&du, (prob_eq_overflow_t)edsrm_mnt_is_cache_overflow, cfg->pd_info) && edsrm_mnt_from_idu(cache, du, cfg->pd_info);
+    if (!cfg->prob_eq(&du, (prob_eq_overflow_t)edsrm_mnt_is_cache_overflow, cfg->pd_info)) {
+        return NULL;
+    }
+    edsrm_mnt_t *result = malloc(sizeof(edsrm_mnt_t));
+    if (!edsrm_mnt_from_idu(result, du, cfg->pd_info)) {
+        free(result);
+        return NULL;
+    }
+    return result;
 }
 
 void edsrm_mnt_free(edsrm_mnt_t *cache) {
     free(cache->segments);
+    free(cache);
 }
 
 double edsrm_mnt_generate(edsrm_mnt_t *cache, gen_callable_t *gc) {
