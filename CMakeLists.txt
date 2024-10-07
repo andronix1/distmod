@@ -9,10 +9,6 @@ target_compile_options(distrand-lib-objects
     PRIVATE
         -Wall -fPIC -O3
 )
-target_link_options(distrand-lib-objects
-  PUBLIC
-    LINKER:-Map=foo.map
-)
 include_directories(include)
 
 if (COMPILE_AS_STATIC)

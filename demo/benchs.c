@@ -33,7 +33,7 @@ bool bi_create_ziggurat_mnt(const bench_info_t *bi, bi_edsrm_info_t *info, int m
         .pd = bi->pd,
         .prob_eq = dbd_prob_eq,
         .size = m,
-        .use_ipd_for_gen = true
+        .use_ipd_for_gen = false
     };
 
     if (!(info->cache = ziggurat_mnt_create(&cfg))) {

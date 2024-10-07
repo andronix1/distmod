@@ -8,5 +8,5 @@
 #include "prob_eq/dbd.h"
 #include "prob_eq/types.h"
 
-extern inline double gen_call(gen_callable_t *gc);
-extern inline bool edsrm_mnt_try_generate(double *result, double first_gen, gen_callable_t *gc, edsrm_mnt_t *cache);
+extern inline double gen_call(const gen_callable_t *gc);
+extern inline bool edsrm_mnt_try_generate(double *result, double first_gen, const gen_callable_t *gc, const edsrm_mnt_t *cache);

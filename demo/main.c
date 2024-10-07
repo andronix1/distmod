@@ -10,7 +10,7 @@
 #define pi 3.1415926535897932384626433832795028841971
 
 DEFINE_BENCH_MNT (1,  0,   1,             2 * u,                                    sqrt(u),                   u / 2);
-DEFINE_BENCH_MNT (2,  0,   0.69314718056, pow(e, u),                                log(1 + u),                log(u));               //ln2
+DEFINE_BENCH_MNT (2,  0,   0.69314718056, exp(u),                                   log(1 + u),                log(u));               //ln2
 DEFINE_BENCH_MNT (3,  0,   0.8414709848,  1.0 / sqrt(1-u*u),                        sin(u),                    sqrt(1-(1 / u / u)));                   //sin1
 DEFINE_BENCH_MNT (4,  0,   pi/4,          1 / pow(cos(u), 2),                       atan(u),                   acos(sqrt(1 / u)));
 DEFINE_BENCH_MNT (5,  0,   pi/2,          cos(u),                                   asin(u),                   acos(u)); //Z
@@ -97,7 +97,7 @@ bool t_by_m(bench_info_t *bi, gen_callable_t *gc, int ms, int me, int step, int 
 int main() {
     cpu_set_t mask;
     CPU_ZERO(&mask);
-    CPU_SET(0, &mask);
+    CPU_SET(1, &mask);
 
     if (sched_setaffinity(0, sizeof(cpu_set_t), &mask)) {
         printf("failed to set cpu affinity!\n");
@@ -111,26 +111,27 @@ int main() {
     };
 
     bi_edsrm_info_t iz;
-    bi_create_ziggurat_mnt(&bi_2, &iz, 200);
+    bi_create_ziggurat_mnt(&bi_2, &iz, 500);
     bi_edsrm_info_t ie;
-    bi_create_edsrm_mnt(&bi_2, &ie, 200);
+    bi_create_edsrm_mnt(&bi_2, &ie, 500);
         
-    double timez;
-    MEASURE_TIME(timez, 1000000, {
-        iz.gen(iz.cache, &mul_gc);
-    });
+    double atimez, atimee;
+    for (int i = 0; i < 10; i++) {
+        double timez;
+        MEASURE_TIME(timez, 50000000, {
+            iz.gen(iz.cache, &mul_gc);
+        });
+        atimez += timez;
 
-    double timee;        
-    MEASURE_TIME(timee, 1000000, {
-        ie.gen(ie.cache, &mul_gc);
-    });
+        double timee;        
+        MEASURE_TIME(timee, 50000000, {
+            ie.gen(ie.cache, &mul_gc);
+        });
+        atimee += timee;
+    }
 
     ziggurat_mnt_t *z = iz.cache;
-    for (int i = 0; i < z->size; i++) {
-        printf("%f ", z->rows[i].u_maj);
-    }
-    printf("\n");
-    printf("%f vs %f with %d per call\n", timez, timee, (z->misses / 1000000));
+    printf("%f vs %f\n", atimez, atimee);
 
     return 0;
 

@@ -35,16 +35,13 @@ edsrm_mnt_t *edsrm_mnt_create(edsrm_mnt_cfg_t *cfg);
 
 void edsrm_mnt_free(edsrm_mnt_t *cache);
 
-inline static bool edsrm_mnt_try_generate(double *result, double u_gen, gen_callable_t *gc, edsrm_mnt_t *cache) {
+inline static bool edsrm_mnt_try_generate(double *result, double u_gen, const gen_callable_t *gc, const edsrm_mnt_t *cache) {
     int col_idx = u_gen * cache->size;
     edsrm_mnt_cache_segment_t *segment = &cache->segments[col_idx];
     double v = gen_call(gc) * segment->v_max;
     double u = segment->u_min + segment->u_width * (cache->size * u_gen - col_idx);
-    bool is_under_pd = v <= segment->v_start || v <= cache->pd(u);
-    if (is_under_pd) {
-        *result = u;
-    }
-    return is_under_pd;
+    *result = u;
+    return v <= segment->v_start || v <= cache->pd(u);
 }
 
 double edsrm_mnt_generate(edsrm_mnt_t *cache, gen_callable_t *gc);
