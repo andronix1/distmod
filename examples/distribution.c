@@ -3,6 +3,8 @@
 #include <malloc.h>
 #include <stdbool.h>
 
+#include "distributions.h"
+
 inline void print_row(FILE *stream, char c, size_t n) {
 	for (size_t i = 0; i < n; i++) {
 		putc(c, stream);
@@ -16,9 +18,6 @@ inline size_t size_t_len(size_t value) {
 	} while (value /= 10);
 	return result;
 }
-
-#define _STRINGIFY(v) #v
-#define STRINGIFY(v) _STRINGIFY(v)
 
 #define DOUBLE_PRINT_PRECISION 6
 #define FORMAT_PRINT_DOUBLE "%.0" STRINGIFY(DOUBLE_PRINT_PRECISION) "f"
@@ -68,10 +67,10 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 	bool min_col_printed = false;
 	print_row(stdout, '-', cols_count + max_col_size);
 	putc('\n', stdout);
-	for (size_t row = height - 1; row > 0; row--) {
+	for (int row = height - 1; row >= 0; row--) {
 		if (row == height - 1) {
 			printf("%d ", max_col);
-		} else if (!min_col_printed && row <= height * min_col / max_col) {
+		} else if (!min_col_printed && (row <= height * min_col / max_col || row == 1)) {
 			min_col_printed = true;
 			print_row(stdout, ' ', max_col_size - min_col_size);
 			printf("%d ", min_col);
@@ -96,14 +95,41 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 	free(gens);
 }
 
-multiplicative_rand_gen_t *rand_gen;
+#define DEFAULT_M 330
 
-double test(void) {
-	return 1.0 / (multiplicative_rand_gen_generate(rand_gen) + 1.0);
-}
+ziggurat_mnt_t *ziggurat;
+edsrm_mnt_t *edsrm;
+gen_callable_t *rand_gen;
+
+double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat, rand_gen); }
+double edsrm_test(void) { return edsrm_mnt_generate(edsrm, rand_gen); }
 
 int main() {
-	rand_gen = multiplicative_rand_gen_create();
-	print_hist_of(test, 10000, 50, 20);
+	multiplicative_rand_gen_t *mrg = multiplicative_rand_gen_create();
+
+	gen_callable_t mrg_gc = {
+		.arg = mrg,
+		.gen = (gen_t)multiplicative_rand_gen_generate
+	};
+	rand_gen = &mrg_gc;
+
+	ziggurat = dist_ziggurat_create(&exponential.dist, DEFAULT_M);
+	if (ziggurat == NULL) {
+		printf("failed to create ziggurat!\n");
+		return 1;
+	}
+
+	edsrm = dist_edsrm_create(&exponential.dist, DEFAULT_M);
+	if (edsrm == NULL) {
+		printf("failed to create edsrm!\n");
+		return 1;
+	}
+
+	print_hist_of(ziggurat_test, 10000, 50, 20);
+	print_hist_of(edsrm_test, 10000, 50, 20);
+
+	edsrm_mnt_free(edsrm);
+	ziggurat_mnt_free(ziggurat);
+	multiplicative_rand_gen_free(mrg);
 	return 0;
 }

@@ -12,6 +12,8 @@ typedef struct {
 typedef struct {
     const bool is_right;
     const double u_start;
+    const double start;
+    const double end;
     const int size;
     const ziggurat_mnt_cache_segment_t * const rows;
     const dfunc_t f;

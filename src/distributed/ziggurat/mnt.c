@@ -7,20 +7,23 @@ double absl(double v) {
 
 double ziggurat_mnt_generate(ziggurat_mnt_t *cache, gen_callable_t *gc) {
     double result;
-    // if (cache->with_bottom_offset) {
-    //     while (true) {
-    //         double gen = gen_call(gc);
-    //         if (gen < cache->bottom_prob) {
-    //             return gen / cache->bottom_prob;
-    //         }
-    //         if (ziggurat_mnt_try_generate(&result, gen, gc, cache)) {
-    //             return result;
-    //         }
-    //     }
-    // } else {
+    if (cache->with_bottom_offset) {
+        while (true) {
+            double gen = gen_call(gc);
+	    double bp = cache->bottom_prob;
+            if (gen < bp) {
+                return gen / bp * (cache->end - cache->start) + cache->start;
+            }
+	    gen -= bp;
+	    gen /= 1 - bp;
+            if (ziggurat_mnt_try_generate(&result, gen, gc, cache)) {
+                return result;
+            }
+        }
+    } else {
         while (!ziggurat_mnt_try_generate(&result, gen_call(gc), gc, cache));
         return result;
-    // }
+    }
 }
 
 double ziggurat_mnt_majorant_area(ziggurat_mnt_cache_segment_t *rows, size_t size) {
@@ -90,16 +93,19 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
 
     ziggurat_mnt_t *result = malloc(sizeof(ziggurat_mnt_t));
     double bottom_area = (config->end - config->start) * bottom_offset;
+    ziggurat_mnt_cache_segment_t *rows = ziggurat_mnt_create_from_initial_height(config, bottom_offset, is_right, initial_height);
     ziggurat_mnt_t data = {
-        .rows = ziggurat_mnt_create_from_initial_height(config, bottom_offset, is_right, initial_height),
+        .rows = rows,
         .use_ipd_for_gen = config->use_ipd_for_gen,
         .f = config->use_ipd_for_gen ? config->ipd : config->pd,
         .is_right = is_right,
         .size = config->size,
         .u_start = u_start,
-        .with_bottom_offset = bottom_offset == 0.0,
+	.start = config->start,
+	.end = config->end,
+        .with_bottom_offset = true, //bottom_area > 1e10,
         .bottom_offset = bottom_offset,
-        .bottom_prob = bottom_area / (bottom_area + ziggurat_mnt_majorant_area(result, config->size)),
+        .bottom_prob = bottom_area / (bottom_area + ziggurat_mnt_majorant_area(rows, config->size)),
     };
     memcpy(result, &data, sizeof(ziggurat_mnt_t));
     // result->rows = ziggurat_mnt_create_from_initial_height(config, bottom_offset, is_right, initial_height);
