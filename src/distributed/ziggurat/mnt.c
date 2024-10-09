@@ -5,25 +5,37 @@ double absl(double v) {
     return v > 0 ? v : -v;
 }
 
-double ziggurat_mnt_generate(ziggurat_mnt_t *cache, gen_callable_t *gc) {
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
+    double ziggurat_mnt_generate(ziggurat_mnt_t *cache, gen_callable_t *gc)
+#else
+    double ziggurat_mnt_generate(ziggurat_mnt_t *cache)
+#endif 
+{
     double result;
+    
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     if (cache->with_bottom_offset) {
         while (true) {
             double gen = gen_call(gc);
-	    double bp = cache->bottom_prob;
+	        double bp = cache->bottom_prob;
             if (gen < bp) {
                 return gen / bp * (cache->end - cache->start) + cache->start;
             }
-	    gen -= bp;
-	    gen /= 1 - bp;
+            gen -= bp;
+            gen /= 1 - bp;
             if (ziggurat_mnt_try_generate(&result, gen, gc, cache)) {
                 return result;
             }
         }
-    } else {
-        while (!ziggurat_mnt_try_generate(&result, gen_call(gc), gc, cache));
-        return result;
     }
+#endif
+    
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
+    while (!ziggurat_mnt_try_generate(&result, gen_call(gc), gc, cache));
+#else
+    while (!ziggurat_mnt_try_generate(&result, DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN_CALL, cache));
+#endif
+    return result;
 }
 
 double ziggurat_mnt_majorant_area(ziggurat_mnt_cache_segment_t *rows, size_t size) {
@@ -33,16 +45,24 @@ double ziggurat_mnt_majorant_area(ziggurat_mnt_cache_segment_t *rows, size_t siz
 
 typedef struct {
     ziggurat_mnt_config_t *config;
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
     bool is_right;
+#endif
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     double bottom_offset;
+#endif
 } ziggurat_mnt_overflow_config_t;
 
 bool ziggurat_mnt_overflow(double initial_height, ziggurat_mnt_overflow_config_t *config) {
     double area = initial_height * (config->config->end - config->config->start);
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     double v = config->bottom_offset;
-    double u = config->is_right ? config->config->end : config->config->start;
+#else
+    double v = 0.0;
+#endif
+    double u = ziggurat_is_right(config->is_right) ? config->config->end : config->config->start;
     for (int i = 0; i < config->config->size; i++) {
-        double nv = v + area / absl((config->is_right ? (u - config->config->start) : (config->config->end - u)));
+        double nv = v + area / absl((ziggurat_is_right(config->is_right) ? (u - config->config->start) : (config->config->end - u)));
         double nu = config->config->ipd(nv);
         if (u < config->config->start || u > config->config->end) {
             return true;
@@ -53,10 +73,18 @@ bool ziggurat_mnt_overflow(double initial_height, ziggurat_mnt_overflow_config_t
     return false;
 }
 
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
 ziggurat_mnt_cache_segment_t *ziggurat_mnt_create_from_initial_height(ziggurat_mnt_config_t *config, double bottom_offset, bool is_right, double initial_height) {
+#else
+ziggurat_mnt_cache_segment_t *ziggurat_mnt_create_from_initial_height(ziggurat_mnt_config_t *config, bool is_right, double initial_height) {
+#endif
     double area = initial_height * (config->end - config->start);
     ziggurat_mnt_cache_segment_t *rows = malloc(sizeof(ziggurat_mnt_cache_segment_t) * config->size);
-    double v = bottom_offset;
+    #ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+        double v = bottom_offset;
+    #else
+        double v = 0.0;
+    #endif
     double u = is_right ? config->end : config->start;
     for (int i = 0; i < config->size; i++) {
         double nv = v + area / absl((is_right ? (u - config->start) : (config->end - u)));
@@ -78,48 +106,66 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
     double bottom_offset = sv > ev ? ev : sv;
 
     bool is_right = sv > ev;
-    double u_start = is_right ? config->start : config->end;
+#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
+    if (DISTRAND_ZIGGURAT_IS_RIGHT != is_right) {
+        // TODO: log invalid direction
+        return NULL;
+    }
+#endif
+    double u_start = ziggurat_is_right(is_right) ? config->start : config->end;
     double initial_height = absl(sv - ev);
 
+    bool with_bottom_offset = bottom_offset > __DBL_MIN__;
+    printf("%f\n", bottom_offset);
+#ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+    if (with_bottom_offset) {
+        // TODO: log invalid offset
+        return NULL;
+    }
+#endif
 
     ziggurat_mnt_overflow_config_t ocfg = {
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
         .bottom_offset = bottom_offset,
+#endif
         .config = config,
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
         .is_right = is_right
+#endif
     };
     if (!config->prob_eq(&initial_height, (bool(*)(double, void*))ziggurat_mnt_overflow, &ocfg)) {
         return NULL;
     }
 
     ziggurat_mnt_t *result = malloc(sizeof(ziggurat_mnt_t));
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     double bottom_area = (config->end - config->start) * bottom_offset;
+#endif
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     ziggurat_mnt_cache_segment_t *rows = ziggurat_mnt_create_from_initial_height(config, bottom_offset, is_right, initial_height);
+#else
+    ziggurat_mnt_cache_segment_t *rows = ziggurat_mnt_create_from_initial_height(config, is_right, initial_height);
+#endif
     ziggurat_mnt_t data = {
         .rows = rows,
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
         .use_ipd_for_gen = config->use_ipd_for_gen,
-        .f = config->use_ipd_for_gen ? config->ipd : config->pd,
+#endif
+        .f = ziggurat_use_ipd(config->use_ipd_for_gen) ? config->ipd : config->pd,
+#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
         .is_right = is_right,
+#endif
         .size = config->size,
         .u_start = u_start,
-	.start = config->start,
-	.end = config->end,
-        .with_bottom_offset = true, //bottom_area > 1e10,
+        .start = config->start,
+        .end = config->end,
+#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+        .with_bottom_offset = with_bottom_offset, //bottom_area > 1e10, // TODO: bootom offset checks
         .bottom_offset = bottom_offset,
         .bottom_prob = bottom_area / (bottom_area + ziggurat_mnt_majorant_area(rows, config->size)),
+#endif
     };
     memcpy(result, &data, sizeof(ziggurat_mnt_t));
-    // result->rows = ziggurat_mnt_create_from_initial_height(config, bottom_offset, is_right, initial_height);
-    // result->use_ipd_for_gen = config->use_ipd_for_gen;
-    // result->f = config->use_ipd_for_gen ? config->ipd : config->pd;
-    // result->is_right = is_right;
-    // result->size = config->size;
-    // result->u_start = u_start;
-    // result->with_bottom_offset = bottom_offset == 0.0;
-    // if (result->with_bottom_offset) {
-    //     result->bottom_offset = bottom_offset;
-    //     double bottom_area = (config->end - config->start) * bottom_offset;
-    //     result->bottom_prob = bottom_area / (bottom_area + ziggurat_mnt_majorant_area(result));
-    // }
     return result;
 }
 

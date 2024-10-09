@@ -1,3 +1,6 @@
+#define _GNU_SOURCE
+
+
 #include <distrand.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -26,11 +29,14 @@ inline size_t double_len(double value, size_t precision) {
 	return size_t_len((size_t)value) + DOUBLE_PRINT_PRECISION;
 }
 
+#include <time.h>
+
 void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, size_t height) {
 	double *gens = malloc(sizeof(double) * gens_count);
 	gens[0] = func();
 	double max_gen = gens[0],
 	       min_gen = gens[0];
+
 	for (size_t i = 1; i < gens_count; i++) {
 		double gen = func();
 		if (gen > max_gen) {
@@ -44,7 +50,8 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 	size_t *cols = malloc(sizeof(size_t) * cols_count);
 	size_t max_col = 0;
 	for (size_t i = 0; i < gens_count; i++) {
-		size_t col = cols[(size_t)((gens[i] - min_gen) / (max_gen - min_gen) * cols_count)]++;
+		size_t cid = trunc((gens[i] - min_gen) / (max_gen - min_gen) * cols_count);
+		size_t col = cols[cid]++;
 		if (col > max_col) {
 			max_col = col;
 		}
@@ -91,45 +98,84 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 	
 	print_row(stdout, '-', cols_count + max_col_size);
 	putc('\n', stdout);
-	free(cols);
+	
 	free(gens);
 }
 
-#define DEFAULT_M 330
+#define DEFAULT_M 500
 
 ziggurat_mnt_t *ziggurat;
 edsrm_mnt_t *edsrm;
+multiplicative_rand_gen_t *mul_rand_gen;
 gen_callable_t *rand_gen;
 
-double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat, rand_gen); }
+double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat); }
 double edsrm_test(void) { return edsrm_mnt_generate(edsrm, rand_gen); }
 
+#include <sched.h>
 int main() {
-	multiplicative_rand_gen_t *mrg = multiplicative_rand_gen_create();
+	mul_rand_gen = multiplicative_rand_gen_create();
 
 	gen_callable_t mrg_gc = {
-		.arg = mrg,
+		.arg = mul_rand_gen,
 		.gen = (gen_t)multiplicative_rand_gen_generate
 	};
 	rand_gen = &mrg_gc;
 
-	ziggurat = dist_ziggurat_create(&exponential.dist, DEFAULT_M);
+	ziggurat = dist_ziggurat_create(&linear.dist, DEFAULT_M);
 	if (ziggurat == NULL) {
 		printf("failed to create ziggurat!\n");
 		return 1;
 	}
 
-	edsrm = dist_edsrm_create(&exponential.dist, DEFAULT_M);
+	edsrm = dist_edsrm_create(&linear.dist, DEFAULT_M);
 	if (edsrm == NULL) {
 		printf("failed to create edsrm!\n");
 		return 1;
 	}
 
-	print_hist_of(ziggurat_test, 10000, 50, 20);
-	print_hist_of(edsrm_test, 10000, 50, 20);
+	printf("ziggurat\n");
+	print_hist_of(ziggurat_test, 1000000, 50, 15);
+	printf("edsrm\n");
+	print_hist_of(edsrm_test, 1000000, 50, 15);
+
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    CPU_SET(2, &mask);
+
+    if (sched_setaffinity(2, sizeof(cpu_set_t), &mask)) {
+        printf("failed to set cpu affinity!\n");
+        return 1;
+    }
+	for (size_t i = 0; i < 10; i++) {
+		{
+			clock_t a = clock();
+			for (size_t i = 1; i < 100000000; i++) {
+				ziggurat_mnt_generate(ziggurat);
+			}
+			clock_t b = clock();
+			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
+		}
+		{
+			clock_t a = clock();
+			for (size_t i = 1; i < 100000000; i++) {
+				edsrm_mnt_generate(edsrm, rand_gen);
+			}
+			clock_t b = clock();
+			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
+		}
+		{
+			clock_t a = clock();
+			for (size_t i = 1; i < 100000000; i++) {
+				volatile double a = pow(gen_call(rand_gen), 1.0/ 10);
+			}
+			clock_t b = clock();
+			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
+		}
+	}
 
 	edsrm_mnt_free(edsrm);
 	ziggurat_mnt_free(ziggurat);
-	multiplicative_rand_gen_free(mrg);
+	multiplicative_rand_gen_free(mul_rand_gen);
 	return 0;
 }

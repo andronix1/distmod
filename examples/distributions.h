@@ -41,7 +41,7 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 		.start = dist->start,
 		.end = dist->end,
 		.size = size,
-		.use_ipd_for_gen = false
+		// .use_ipd_for_gen = false
 	};
 	return ziggurat_mnt_create(&cfg);
 }
@@ -72,4 +72,5 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 		} 				\
 	};
 
-define_full_dist(exponential, 2.0*u, 0.5*u, 0, 1.0, 2.0);
+define_full_dist(linear, 2.0*u, 0.5*u, 0, 0.0, 2.0);
+define_full_dist(exponential, 1 / u, 1 / u, 0, 0.0, 2.0);

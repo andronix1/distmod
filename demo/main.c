@@ -111,9 +111,9 @@ int main() {
     };
 
     bi_edsrm_info_t iz;
-    bi_create_ziggurat_mnt(&bi_2, &iz, 500);
+    bi_create_ziggurat_mnt(&bi_2, &iz, 330);
     bi_edsrm_info_t ie;
-    bi_create_edsrm_mnt(&bi_2, &ie, 500);
+    bi_create_edsrm_mnt(&bi_2, &ie, 330);
         
     double atimez, atimee;
     for (int i = 0; i < 10; i++) {

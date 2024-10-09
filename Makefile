@@ -26,7 +26,7 @@ build-obj: setup src/distributed/edsrm/mnt src/distributed/edsrm/2rng src/distri
 build-examples: setup examples/distribution
 
 examples/%: examples/%.c
-	$(CC) $(CFLAGS) $(EXAMPLES_CFLAGS) $^ $(LIBRARY_OUTPUT) -o $(BUILD_EXAMPLES_DIR)/$*
+	$(CC) $(CFLAGS) $(EXAMPLES_CFLAGS) $^ $(LIBRARY_OUTPUT) -o $(BUILD_EXAMPLES_DIR)/$* -lm
 
 src/%: src/%.c
 	mkdir -p $(BUILD_OBJ_DIR)/$@
