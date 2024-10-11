@@ -33,7 +33,11 @@ bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg) {
 
 double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *gc) {
     double res;
+#ifndef DISTRAND_DISABLE_DYNAMIC_RAND_GEN
     while (!edsrm_2rng_try_generate(&res, gen_call(gc), gc, cache));
+#else
+    while (!edsrm_2rng_try_generate(&res, gen_call(gc), cache));
+#endif
     return res;
 }
 

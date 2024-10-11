@@ -4,22 +4,18 @@
 #include "prob_eq/types.h"
 #include "types.h"
 #include "dmode.h"
+#include "../../uniform/perfomance.h"
 
 #include "../../uniform/multiplicative.h"
-extern multiplicative_rand_gen_t *mul_rand_gen;
 
 #define DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
 
-#define DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
-#define DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN_CALL multiplicative_rand_gen_generate(mul_rand_gen)
-
-#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
-    #ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN_CALL
-        #error "DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN_CALL undefined"
-    #endif
-    #define ziggurat_rand_gen(val) DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN_CALL
+#ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+    #define with_bottom_offset(name)
+    #define pass_bottom_offset(name)
 #else
-    #define ziggurat_rand_gen(val) val
+    #define with_bottom_offset(name) , bool name
+    #define pass_bottom_offset(name) , name
 #endif
 
 #define DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
@@ -42,8 +38,12 @@ extern multiplicative_rand_gen_t *mul_rand_gen;
         #error "DISTRAND_ZIGGURAT_IS_RIGHT undefined"
     #endif
     #define ziggurat_is_right(val) DISTRAND_ZIGGURAT_IS_RIGHT
+    #define with_is_right(name)
+    #define pass_is_right(name)
 #else
     #define ziggurat_is_right(val) val
+    #define with_is_right(name) , bool name
+    #define pass_is_right(name) , name
 #endif
 
 typedef struct {
@@ -52,21 +52,21 @@ typedef struct {
 
 typedef struct {
 #ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
-    const bool is_right;
+    bool is_right;
 #endif
-    const double u_start;
-    const double start;
-    const double end;
-    const int size;
-    const ziggurat_mnt_cache_segment_t * const rows;
-    const dfunc_t f;
+    double u_start;
+    double start;
+    double end;
+    int size;
+    ziggurat_mnt_cache_segment_t * rows;
+    dfunc_t f;
 #ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
-    const double bottom_prob;
-    const double bottom_offset;
-    const bool with_bottom_offset;
+    double bottom_prob;
+    double bottom_offset;
+    bool with_bottom_offset;
 #endif
 #ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
-    const bool use_ipd_for_gen;
+    bool use_ipd_for_gen;
 #endif
 } ziggurat_mnt_t;
 
@@ -82,12 +82,7 @@ typedef struct {
 
 ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) ;
 
-#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
-inline static bool ziggurat_mnt_try_generate(double *result, const double initial_gen, const gen_callable_t *gc, const ziggurat_mnt_t *cache) 
-#else
-inline static bool ziggurat_mnt_try_generate(double *result, const double initial_gen, const ziggurat_mnt_t *cache) 
-#endif
-{
+inline static bool ziggurat_mnt_try_generate(double *result, const double initial_gen with_gc(gc), const ziggurat_mnt_t *cache) {
     const double gen = initial_gen * cache->size;
     const int row_idx = trunc(gen);
     const ziggurat_mnt_cache_segment_t *row = &cache->rows[row_idx];
@@ -105,13 +100,9 @@ inline static bool ziggurat_mnt_try_generate(double *result, const double initia
             return true;
         }
     }
-    const double v = row->v_start + ziggurat_rand_gen(gen_call(gc)) * (row->v_end - row->v_start);
+    const double v = row->v_start + rand_gen(gen_call(gc)) * (row->v_end - row->v_start);
     return ziggurat_use_ipd(cache->use_ipd_for_gen) ? (ziggurat_is_right(cache->is_right) ? cache->f(v) < u : cache->f(v) > u) : v < cache->f(u);
 }
 
-#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_RAND_GEN
-    double ziggurat_mnt_generate(ziggurat_mnt_t *cache, gen_callable_t *gc);
-#else
-    double ziggurat_mnt_generate(ziggurat_mnt_t *cache);
-#endif
+double ziggurat_mnt_generate(ziggurat_mnt_t *cache with_gc(gc));
 void ziggurat_mnt_free(ziggurat_mnt_t *cache);

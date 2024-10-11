@@ -110,7 +110,7 @@ multiplicative_rand_gen_t *mul_rand_gen;
 gen_callable_t *rand_gen;
 
 double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat); }
-double edsrm_test(void) { return edsrm_mnt_generate(edsrm, rand_gen); }
+double edsrm_test(void) { return edsrm_mnt_generate(edsrm); }
 
 #include <sched.h>
 int main() {
@@ -159,7 +159,7 @@ int main() {
 		{
 			clock_t a = clock();
 			for (size_t i = 1; i < 100000000; i++) {
-				edsrm_mnt_generate(edsrm, rand_gen);
+				edsrm_mnt_generate(edsrm);
 			}
 			clock_t b = clock();
 			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);

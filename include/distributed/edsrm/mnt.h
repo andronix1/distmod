@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "prob_eq/types.h"
 #include "types.h"
+#include "../../uniform/perfomance.h"
 
 typedef struct {
     double u_min, v_max, v_start, u_width;
@@ -35,13 +36,13 @@ edsrm_mnt_t *edsrm_mnt_create(edsrm_mnt_cfg_t *cfg);
 
 void edsrm_mnt_free(edsrm_mnt_t *cache);
 
-inline static bool edsrm_mnt_try_generate(double *result, double u_gen, const gen_callable_t *gc, const edsrm_mnt_t *cache) {
+inline static bool edsrm_mnt_try_generate(double *result, double u_gen with_gc(gc), const edsrm_mnt_t *cache) {
     int col_idx = u_gen * cache->size;
     edsrm_mnt_cache_segment_t *segment = &cache->segments[col_idx];
-    double v = gen_call(gc) * segment->v_max;
+    double v = rand_gen(gen_call(gc)) * segment->v_max;
     double u = segment->u_min + segment->u_width * (cache->size * u_gen - col_idx);
     *result = u;
     return v <= segment->v_start || v <= cache->pd(u);
 }
 
-double edsrm_mnt_generate(edsrm_mnt_t *cache, gen_callable_t *gc);
+double edsrm_mnt_generate(edsrm_mnt_t *cache with_gc(gc));

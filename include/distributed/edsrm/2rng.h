@@ -16,7 +16,12 @@ typedef struct {
     uint32_t lsize, rsize;
 } edsrm_2rng_cfg_t;
 
-inline static bool edsrm_2rng_try_generate(double *res, double u_gen, gen_callable_t *gc, edsrm_2rng_t *cache) {
+#ifndef DISTRAND_DISABLE_DYNAMIC_RAND_GEN
+    inline static bool edsrm_2rng_try_generate(double *res, double u_gen, gen_callable_t *gc, edsrm_2rng_t *cache) 
+#else
+    inline static bool edsrm_2rng_try_generate(double *res, double u_gen, edsrm_2rng_t *cache) 
+#endif
+{
     edsrm_mnt_t *mnt_cache;
     if (u_gen < cache->leftp) {
         mnt_cache = cache->lcache;
@@ -25,7 +30,11 @@ inline static bool edsrm_2rng_try_generate(double *res, double u_gen, gen_callab
         mnt_cache = cache->rcache;
         u_gen = (u_gen - cache->leftp) / cache->rightp;
     }
+#ifndef DISTRAND_DISABLE_DYNAMIC_RAND_GEN
     return edsrm_mnt_try_generate(res, u_gen, gc, mnt_cache);
+#else
+    return edsrm_mnt_try_generate(res, u_gen, mnt_cache);
+#endif
 }
 double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *uc);
 bool edsrm_2rng_create(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg);

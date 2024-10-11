@@ -78,8 +78,8 @@ void edsrm_mnt_free(edsrm_mnt_t *cache) {
     free(cache);
 }
 
-double edsrm_mnt_generate(edsrm_mnt_t *cache, gen_callable_t *gc) {
+double edsrm_mnt_generate(edsrm_mnt_t *cache with_gc(gc)) {
     double result;
-    while (!edsrm_mnt_try_generate(&result, gen_call(gc), gc, cache));
+    while (!edsrm_mnt_try_generate(&result, rand_gen(gen_call(gc)) pass_gc(gc), cache));
     return result;
 }
