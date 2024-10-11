@@ -1,5 +1,0 @@
-/mnt/memory/C/distrand/cbuild/CMakeFiles/distrand-lib-objects.dir
-/mnt/memory/C/distrand/cbuild/CMakeFiles/distrand-lib.dir
-/mnt/memory/C/distrand/cbuild/CMakeFiles/distrand-demo.dir
-/mnt/memory/C/distrand/cbuild/CMakeFiles/edit_cache.dir
-/mnt/memory/C/distrand/cbuild/CMakeFiles/rebuild_cache.dir

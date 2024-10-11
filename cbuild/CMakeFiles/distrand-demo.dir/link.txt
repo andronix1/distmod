@@ -1,1 +1,0 @@
-/usr/bin/cc "CMakeFiles/distrand-demo.dir/demo/benchs.c.o" "CMakeFiles/distrand-demo.dir/demo/hist.c.o" "CMakeFiles/distrand-demo.dir/demo/main.c.o" -o distrand-demo  -lm libdistrand-lib.a 

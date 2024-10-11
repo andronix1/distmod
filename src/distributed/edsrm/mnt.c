@@ -15,6 +15,7 @@ bool edsrm_mnt_from_idu(edsrm_mnt_t *result, double du, edsrm_mnt_pd_info_t *inf
 
     if (segment_area < 0) {
         free(result->segments);
+	LOGE("result initial du = %f is negative", u);
         return false;
     }
 
@@ -22,6 +23,7 @@ bool edsrm_mnt_from_idu(edsrm_mnt_t *result, double du, edsrm_mnt_pd_info_t *inf
         double v_max = info->pd(u);
         if (v_max < 0) {
             free(result->segments);
+	    LOGE("probability distribution is negative when u = %f", u);
             return false;
         }
         double du = segment_area / v_max;
@@ -60,22 +62,20 @@ bool edsrm_mnt_is_cache_overflow(double du, edsrm_mnt_pd_info_t *info) {
     return false;
 }
 
-edsrm_mnt_t *edsrm_mnt_create(edsrm_mnt_cfg_t *cfg) {
+edsrm_mnt_result_t edsrm_mnt_init(edsrm_mnt_t *result, edsrm_mnt_cfg_t *cfg) {
     double du = (cfg->pd_info->b - cfg->pd_info->a) / cfg->pd_info->size;
     if (!cfg->prob_eq(&du, (prob_eq_overflow_t)edsrm_mnt_is_cache_overflow, cfg->pd_info)) {
-        return NULL;
+	LOGE("failed to equalize probabilities");
+        return EDSRM_MNT_ERR_PROB_EQ;
     }
-    edsrm_mnt_t *result = malloc(sizeof(edsrm_mnt_t));
     if (!edsrm_mnt_from_idu(result, du, cfg->pd_info)) {
-        free(result);
-        return NULL;
+        return EDSRM_MNT_ERR_CACHE;
     }
-    return result;
+    return EDSRM_MNT_OK;
 }
 
 void edsrm_mnt_free(edsrm_mnt_t *cache) {
     free(cache->segments);
-    free(cache);
 }
 
 double edsrm_mnt_generate(edsrm_mnt_t *cache with_gc(gc)) {

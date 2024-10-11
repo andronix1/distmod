@@ -1,6 +1,3 @@
-#define _GNU_SOURCE
-
-
 #include <distrand.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -105,12 +102,12 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 #define DEFAULT_M 500
 
 ziggurat_mnt_t *ziggurat;
-edsrm_mnt_t *edsrm;
+edsrm_mnt_t edsrm;
 multiplicative_rand_gen_t *mul_rand_gen;
 gen_callable_t *rand_gen;
 
 double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat); }
-double edsrm_test(void) { return edsrm_mnt_generate(edsrm); }
+double edsrm_test(void) { return edsrm_mnt_generate(&edsrm); }
 
 #include <sched.h>
 int main() {
@@ -128,8 +125,8 @@ int main() {
 		return 1;
 	}
 
-	edsrm = dist_edsrm_create(&linear.dist, DEFAULT_M);
-	if (edsrm == NULL) {
+	
+	if (dist_edsrm_init(&edsrm, &linear.dist, DEFAULT_M)) {
 		printf("failed to create edsrm!\n");
 		return 1;
 	}
@@ -139,14 +136,6 @@ int main() {
 	printf("edsrm\n");
 	print_hist_of(edsrm_test, 1000000, 50, 15);
 
-    cpu_set_t mask;
-    CPU_ZERO(&mask);
-    CPU_SET(2, &mask);
-
-    if (sched_setaffinity(2, sizeof(cpu_set_t), &mask)) {
-        printf("failed to set cpu affinity!\n");
-        return 1;
-    }
 	for (size_t i = 0; i < 10; i++) {
 		{
 			clock_t a = clock();
@@ -159,7 +148,7 @@ int main() {
 		{
 			clock_t a = clock();
 			for (size_t i = 1; i < 100000000; i++) {
-				edsrm_mnt_generate(edsrm);
+				edsrm_mnt_generate(&edsrm);
 			}
 			clock_t b = clock();
 			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
@@ -174,7 +163,7 @@ int main() {
 		}
 	}
 
-	edsrm_mnt_free(edsrm);
+	edsrm_mnt_free(&edsrm);
 	ziggurat_mnt_free(ziggurat);
 	multiplicative_rand_gen_free(mul_rand_gen);
 	return 0;

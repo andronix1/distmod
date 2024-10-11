@@ -15,7 +15,8 @@ run: build
 
 examples: build-examples
 	@echo "running tests..."
-	./$(BUILD_EXAMPLES_DIR)/distribution
+	# ./$(BUILD_EXAMPLES_DIR)/distribution
+	./$(BUILD_EXAMPLES_DIR)/perfomance
 	@echo "finished!"
 
 build: build-obj
@@ -23,7 +24,7 @@ build: build-obj
 
 build-obj: setup src/distributed/edsrm/mnt src/distributed/edsrm/2rng src/distributed/ziggurat/mnt src/prob_eq/dbd src/uniform/multiplicative src/uniform/mt19937_64 
 
-build-examples: setup examples/distribution
+build-examples: setup examples/distribution examples/perfomance
 
 examples/%: examples/%.c
 	$(CC) $(CFLAGS) $(EXAMPLES_CFLAGS) $^ $(LIBRARY_OUTPUT) -o $(BUILD_EXAMPLES_DIR)/$* -lm

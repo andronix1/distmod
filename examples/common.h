@@ -19,7 +19,7 @@ typedef struct {
 	const char *pd_str, *ipd_str, *pdi_str;
 } full_dist_t;
 
-edsrm_mnt_result_t dist_edsrm_init(edsrm_mnt_t *cache, dist_t *dist, size_t size) {
+edsrm_mnt_t *dist_edsrm_create(dist_t *dist, size_t size) {
 	edsrm_mnt_pd_info_t pd_info = {
 		.pd = dist->pd,
 		.a = dist->start,
@@ -30,7 +30,7 @@ edsrm_mnt_result_t dist_edsrm_init(edsrm_mnt_t *cache, dist_t *dist, size_t size
 		.pd_info = &pd_info,
 		.prob_eq = dbd_prob_eq
 	};
-	return edsrm_mnt_init(cache, &cfg);
+	return edsrm_mnt_create(&cfg);
 }
 
 ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
@@ -41,7 +41,7 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 		.start = dist->start,
 		.end = dist->end,
 		.size = size,
-		// .use_ipd_for_gen = false
+		.use_ipd_for_gen = false
 	};
 	return ziggurat_mnt_create(&cfg);
 }
@@ -72,5 +72,4 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 		} 				\
 	};
 
-define_full_dist(linear, 2.0*u, 0.5*u, 0, 0.0, 2.0);
-define_full_dist(exponential, 1 / u, 1 / u, 0, 0.0, 2.0);
+define_full_dist(exponential, 2.0*u, 0.5*u, 0, 1.0, 2.0);

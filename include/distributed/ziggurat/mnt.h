@@ -3,7 +3,6 @@
 #include <math.h>
 #include "prob_eq/types.h"
 #include "types.h"
-#include "dmode.h"
 #include "../../uniform/perfomance.h"
 
 #include "../../uniform/multiplicative.h"
