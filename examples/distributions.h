@@ -6,6 +6,8 @@
 #define _STRINGIFY(v) #v
 #define STRINGIFY(v) _STRINGIFY(v)
 
+#define DEFAULT_M 500
+
 typedef struct { 
 	// pd -  probability distribution       f(x)
 	// pdi - inverse probaility distibution f^(-1)(x) 
@@ -19,7 +21,7 @@ typedef struct {
 	const char *pd_str, *ipd_str, *pdi_str;
 } full_dist_t;
 
-edsrm_mnt_result_t dist_edsrm_init(edsrm_mnt_t *cache, dist_t *dist, size_t size) {
+edsrm_mnt_err_t dist_edsrm_init(edsrm_mnt_t *cache, dist_t *dist, size_t size) {
 	edsrm_mnt_pd_info_t pd_info = {
 		.pd = dist->pd,
 		.a = dist->start,
@@ -33,7 +35,7 @@ edsrm_mnt_result_t dist_edsrm_init(edsrm_mnt_t *cache, dist_t *dist, size_t size
 	return edsrm_mnt_init(cache, &cfg);
 }
 
-ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
+ziggurat_mnt_err_t dist_ziggurat_init(ziggurat_mnt_t *cache, dist_t *dist, size_t size) {
 	ziggurat_mnt_config_t cfg = {
 		.prob_eq = dbd_prob_eq,
 		.ipd = dist->pdi,
@@ -43,7 +45,7 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 		.size = size,
 		// .use_ipd_for_gen = false
 	};
-	return ziggurat_mnt_create(&cfg);
+	return ziggurat_mnt_init(cache, &cfg);
 }
 
 #define define_full_dist(name, pdc, pdic, ipdc, startv, endv) \
@@ -73,4 +75,4 @@ ziggurat_mnt_t *dist_ziggurat_create(dist_t *dist, size_t size) {
 	};
 
 define_full_dist(linear, 2.0*u, 0.5*u, 0, 0.0, 2.0);
-define_full_dist(exponential, 1 / u, 1 / u, 0, 0.0, 2.0);
+define_full_dist(exponential, 1 / u, 1 / u, log(u), 0.0, 2.0);

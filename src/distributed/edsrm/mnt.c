@@ -62,7 +62,7 @@ bool edsrm_mnt_is_cache_overflow(double du, edsrm_mnt_pd_info_t *info) {
     return false;
 }
 
-edsrm_mnt_result_t edsrm_mnt_init(edsrm_mnt_t *result, edsrm_mnt_cfg_t *cfg) {
+edsrm_mnt_err_t edsrm_mnt_init(edsrm_mnt_t *result, edsrm_mnt_cfg_t *cfg) {
     double du = (cfg->pd_info->b - cfg->pd_info->a) / cfg->pd_info->size;
     if (!cfg->prob_eq(&du, (prob_eq_overflow_t)edsrm_mnt_is_cache_overflow, cfg->pd_info)) {
 	LOGE("failed to equalize probabilities");

@@ -3,9 +3,8 @@
 #include <math.h>
 #include "prob_eq/types.h"
 #include "types.h"
+#include "../../log.h"
 #include "../../uniform/perfomance.h"
-
-#include "../../uniform/multiplicative.h"
 
 #define DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
 
@@ -79,7 +78,19 @@ typedef struct {
 #endif
 } ziggurat_mnt_config_t;
 
-ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) ;
+typedef enum {
+	ZIGGURAT_MNT_OK = 0,
+	ZIGGURAT_MNT_ERR_PROB_EQ,
+	ZIGGURAT_MNT_ERR_CACHE,
+#ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+	ZIGGURAT_MNT_ERR_NOT_ADJOINING,
+#endif
+#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
+	ZIGGURAT_MNT_ERR_DYN_DIR,
+#endif
+} ziggurat_mnt_err_t;
+
+ziggurat_mnt_err_t ziggurat_mnt_init(ziggurat_mnt_t *result, ziggurat_mnt_config_t *config);
 
 inline static bool ziggurat_mnt_try_generate(double *result, const double initial_gen with_gc(gc), const ziggurat_mnt_t *cache) {
     const double gen = initial_gen * cache->size;

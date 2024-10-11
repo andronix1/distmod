@@ -3,8 +3,8 @@
 #include "multiplicative.h"
 
 #define DISTRAND_DISABLE_DYNAMIC_RAND_GEN
-#define DISTRAND_RAND_GEN_EXTERN multiplicative_rand_gen_t *mul_rand_gen
-#define DISTRAND_RAND_GEN_CALL multiplicative_rand_gen_generate(mul_rand_gen)
+#define DISTRAND_RAND_GEN_EXTERN multiplicative_rand_gen_t mul_rand_gen
+#define DISTRAND_RAND_GEN_CALL multiplicative_rand_gen_generate(&mul_rand_gen)
 
 #ifdef DISTRAND_DISABLE_DYNAMIC_RAND_GEN
     #ifdef DISTRAND_RAND_GEN_EXTERN

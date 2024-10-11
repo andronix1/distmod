@@ -87,7 +87,7 @@ ziggurat_mnt_cache_segment_t *ziggurat_mnt_create_from_initial_height(ziggurat_m
     return rows;
 }
 
-ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
+ziggurat_mnt_err_t ziggurat_mnt_init(ziggurat_mnt_t *result, ziggurat_mnt_config_t *config) {
     double sv = config->pd(config->start);
     double ev = config->pd(config->end);
     double bottom_offset = sv > ev ? ev : sv;
@@ -95,8 +95,8 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
     bool is_right = sv > ev;
 #ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
     if (DISTRAND_ZIGGURAT_IS_RIGHT != is_right) {
-        // TODO: log invalid direction
-        return NULL;
+	LOGE("cannot create %s function because of DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION", is_right ? "left" : "right");
+        return ZIGGURAT_MNT_ERR_DYN_DIR;
     }
 #endif
     double u_start = ziggurat_is_right(is_right) ? config->start : config->end;
@@ -105,8 +105,8 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
     bool with_bottom_offset = bottom_offset > __DBL_MIN__;
 #ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     if (with_bottom_offset) {
-        // TODO: log invalid offset
-        return NULL;
+	LOGE("cannot create from not adjoining function because of DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET");
+        return ZIGGURAT_MNT_ERR_NOT_ADJOINING;
     }
 #endif
 
@@ -120,10 +120,9 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
 #endif
     };
     if (!config->prob_eq(&initial_height, (bool(*)(double, void*))ziggurat_mnt_overflow, &ocfg)) {
-        return NULL;
+        return ZIGGURAT_MNT_ERR_PROB_EQ;
     }
 
-    ziggurat_mnt_t *result = malloc(sizeof(ziggurat_mnt_t));
 #ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     double bottom_area = (config->end - config->start) * bottom_offset;
 #endif
@@ -145,10 +144,9 @@ ziggurat_mnt_t *ziggurat_mnt_create(ziggurat_mnt_config_t *config) {
     result->bottom_offset = bottom_offset;
     result->bottom_prob = bottom_area / (bottom_area + ziggurat_mnt_majorant_area(rows, config->size));
 #endif
-    return result;
+    return ZIGGURAT_MNT_OK;
 }
 
 void ziggurat_mnt_free(ziggurat_mnt_t *cache) {
     free(cache->rows);
-    free(cache);
 }

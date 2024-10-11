@@ -26,8 +26,6 @@ inline size_t double_len(double value, size_t precision) {
 	return size_t_len((size_t)value) + DOUBLE_PRINT_PRECISION;
 }
 
-#include <time.h>
-
 void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, size_t height) {
 	double *gens = malloc(sizeof(double) * gens_count);
 	gens[0] = func();
@@ -99,28 +97,25 @@ void print_hist_of(double(*func)(void), size_t gens_count, size_t cols_count, si
 	free(gens);
 }
 
-#define DEFAULT_M 500
-
-ziggurat_mnt_t *ziggurat;
+ziggurat_mnt_t ziggurat;
 edsrm_mnt_t edsrm;
-multiplicative_rand_gen_t *mul_rand_gen;
+multiplicative_rand_gen_t mul_rand_gen;
 gen_callable_t *rand_gen;
 
-double ziggurat_test(void) { return ziggurat_mnt_generate(ziggurat); }
+double ziggurat_test(void) { return ziggurat_mnt_generate(&ziggurat); }
 double edsrm_test(void) { return edsrm_mnt_generate(&edsrm); }
 
-#include <sched.h>
 int main() {
-	mul_rand_gen = multiplicative_rand_gen_create();
+	multiplicative_rand_gen_init(&mul_rand_gen);
 
 	gen_callable_t mrg_gc = {
-		.arg = mul_rand_gen,
+		.arg = &mul_rand_gen,
 		.gen = (gen_t)multiplicative_rand_gen_generate
 	};
 	rand_gen = &mrg_gc;
 
-	ziggurat = dist_ziggurat_create(&linear.dist, DEFAULT_M);
-	if (ziggurat == NULL) {
+
+	if (dist_ziggurat_init(&ziggurat, &linear.dist, DEFAULT_M)) {
 		printf("failed to create ziggurat!\n");
 		return 1;
 	}
@@ -136,35 +131,7 @@ int main() {
 	printf("edsrm\n");
 	print_hist_of(edsrm_test, 1000000, 50, 15);
 
-	for (size_t i = 0; i < 10; i++) {
-		{
-			clock_t a = clock();
-			for (size_t i = 1; i < 100000000; i++) {
-				ziggurat_mnt_generate(ziggurat);
-			}
-			clock_t b = clock();
-			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
-		}
-		{
-			clock_t a = clock();
-			for (size_t i = 1; i < 100000000; i++) {
-				edsrm_mnt_generate(&edsrm);
-			}
-			clock_t b = clock();
-			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
-		}
-		{
-			clock_t a = clock();
-			for (size_t i = 1; i < 100000000; i++) {
-				volatile double a = pow(gen_call(rand_gen), 1.0/ 10);
-			}
-			clock_t b = clock();
-			printf("%d\n", (b - a) * 1000000 / CLOCKS_PER_SEC);
-		}
-	}
-
 	edsrm_mnt_free(&edsrm);
-	ziggurat_mnt_free(ziggurat);
-	multiplicative_rand_gen_free(mul_rand_gen);
+	ziggurat_mnt_free(&ziggurat);
 	return 0;
 }

@@ -28,5 +28,13 @@ inline static bool edsrm_2rng_try_generate(double *res, double u_gen with_gc(gc)
     return edsrm_mnt_try_generate(res, u_gen pass_gc(gc), mnt_cache);
 }
 double edsrm_2rng_generate(edsrm_2rng_t *cache, gen_callable_t *uc);
-bool edsrm_2rng_init(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg);
+
+typedef struct {
+	edsrm_mnt_err_t left;
+	edsrm_mnt_err_t right;
+} edsrm_2rng_err_t;
+
+#define edsrm_2rng_is_err(err) (err.left || err.right)
+edsrm_2rng_err_t edsrm_2rng_init(edsrm_2rng_t *cache, edsrm_2rng_cfg_t *cfg);
+
 void edsrm_2rng_free(edsrm_2rng_t *cache);

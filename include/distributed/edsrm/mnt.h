@@ -35,12 +35,12 @@ bool edsrm_mnt_is_cache_overflow(double du, edsrm_mnt_pd_info_t *info);
 bool edsrm_mnt_from_idu(edsrm_mnt_t *cache, double idu, edsrm_mnt_pd_info_t *info);
 
 typedef enum {
-	EDSRM_MNT_OK,
+	EDSRM_MNT_OK = 0,
 	EDSRM_MNT_ERR_PROB_EQ,
 	EDSRM_MNT_ERR_CACHE
-} edsrm_mnt_result_t;
+} edsrm_mnt_err_t;
 
-edsrm_mnt_result_t edsrm_mnt_init(edsrm_mnt_t *result, edsrm_mnt_cfg_t *cfg);
+edsrm_mnt_err_t edsrm_mnt_init(edsrm_mnt_t *result, edsrm_mnt_cfg_t *cfg);
 
 void edsrm_mnt_free(edsrm_mnt_t *cache);
 
