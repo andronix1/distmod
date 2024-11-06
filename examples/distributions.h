@@ -1,6 +1,6 @@
 #pragma once
 
-#include <distrand.h>
+#include <distmod.h>
 #include <math.h>
 
 #define _STRINGIFY(v) #v
@@ -74,5 +74,8 @@ ziggurat_mnt_err_t dist_ziggurat_init(ziggurat_mnt_t *cache, dist_t *dist, size_
 		} 				\
 	};
 
+#define pi 3.14159265359
+
 define_full_dist(linear, 2.0*u, 0.5*u, 0, 0.0, 2.0);
 define_full_dist(exponential, 1 / u, 1 / u, log(u), 0.0, 2.0);
+define_full_dist(last, (pi + 1) * pow(u, pi), pow(u / (pi + 1), 1 / pi), pow(u, 1 / (pi + 1)), 0, 1);

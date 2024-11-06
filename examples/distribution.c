@@ -1,4 +1,4 @@
-#include <distrand.h>
+#include <distmod.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <stdbool.h>
@@ -102,8 +102,8 @@ edsrm_mnt_t edsrm;
 multiplicative_rand_gen_t mul_rand_gen;
 gen_callable_t *rand_gen;
 
-double ziggurat_test(void) { return ziggurat_mnt_generate(&ziggurat); }
-double edsrm_test(void) { return edsrm_mnt_generate(&edsrm); }
+double ziggurat_test(void) { return ziggurat_mnt_generate(&ziggurat pass_gc(rand_gen)); }
+double edsrm_test(void) { return edsrm_mnt_generate(&edsrm pass_gc(rand_gen)); }
 
 int main() {
 	multiplicative_rand_gen_init(&mul_rand_gen);

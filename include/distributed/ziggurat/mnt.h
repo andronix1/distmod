@@ -6,9 +6,7 @@
 #include "../../log.h"
 #include "../../uniform/perfomance.h"
 
-#define DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
-
-#ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+#ifdef DISTMOD_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     #define with_bottom_offset(name)
     #define pass_bottom_offset(name)
 #else
@@ -16,26 +14,20 @@
     #define pass_bottom_offset(name) , name
 #endif
 
-#define DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
-#define DISTRAND_ZIGGURAT_USE_IPD true
-
-#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
-    #ifndef DISTRAND_ZIGGURAT_USE_IPD
-        #error "DISTRAND_ZIGGURAT_USE_IPD undefined"
+#ifdef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
+    #ifndef DISTMOD_ZIGGURAT_USE_IPD
+        #error "DISTMOD_ZIGGURAT_USE_IPD undefined"
     #endif
-    #define ziggurat_use_ipd(val) DISTRAND_ZIGGURAT_USE_IPD
+    #define ziggurat_use_ipd(val) DISTMOD_ZIGGURAT_USE_IPD
 #else
     #define ziggurat_use_ipd(val) val
 #endif
 
-#define DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
-#define DISTRAND_ZIGGURAT_IS_RIGHT false
-
-#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
-    #ifndef DISTRAND_ZIGGURAT_IS_RIGHT
-        #error "DISTRAND_ZIGGURAT_IS_RIGHT undefined"
+#ifdef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
+    #ifndef DISTMOD_ZIGGURAT_IS_RIGHT
+        #error "DISTMOD_ZIGGURAT_IS_RIGHT undefined"
     #endif
-    #define ziggurat_is_right(val) DISTRAND_ZIGGURAT_IS_RIGHT
+    #define ziggurat_is_right(val) DISTMOD_ZIGGURAT_IS_RIGHT
     #define with_is_right(name)
     #define pass_is_right(name)
 #else
@@ -49,7 +41,7 @@ typedef struct {
 } ziggurat_mnt_cache_segment_t;
 
 typedef struct {
-#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
+#ifndef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
     bool is_right;
 #endif
     double u_start;
@@ -58,12 +50,12 @@ typedef struct {
     int size;
     ziggurat_mnt_cache_segment_t * rows;
     dfunc_t f;
-#ifndef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+#ifndef DISTMOD_ZIGGURAT_DISABLE_BOTTOM_OFFSET
     double bottom_prob;
     double bottom_offset;
     bool with_bottom_offset;
 #endif
-#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
+#ifndef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
     bool use_ipd_for_gen;
 #endif
 } ziggurat_mnt_t;
@@ -73,7 +65,7 @@ typedef struct {
     dfunc_t ipd, pd;
     double start, end;
     int size;
-#ifndef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
+#ifndef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_USE_IPD
     bool use_ipd_for_gen;
 #endif
 } ziggurat_mnt_config_t;
@@ -82,10 +74,10 @@ typedef enum {
 	ZIGGURAT_MNT_OK = 0,
 	ZIGGURAT_MNT_ERR_PROB_EQ,
 	ZIGGURAT_MNT_ERR_CACHE,
-#ifdef DISTRAND_ZIGGURAT_DISABLE_BOTTOM_OFFSET
+#ifdef DISTMOD_ZIGGURAT_DISABLE_BOTTOM_OFFSET
 	ZIGGURAT_MNT_ERR_NOT_ADJOINING,
 #endif
-#ifdef DISTRAND_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
+#ifdef DISTMOD_ZIGGURAT_DISABLE_DYNAMIC_DIRECTION
 	ZIGGURAT_MNT_ERR_DYN_DIR,
 #endif
 } ziggurat_mnt_err_t;

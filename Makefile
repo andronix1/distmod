@@ -8,14 +8,14 @@ LD_FLAGS=rcsv
 BUILD_DIR=build
 BUILD_EXAMPLES_DIR=$(BUILD_DIR)/examples
 BUILD_OBJ_DIR=$(BUILD_DIR)/obj
-LIBRARY_OUTPUT=$(BUILD_DIR)/libdistrand.a
+LIBRARY_OUTPUT=$(BUILD_DIR)/libdistmod.a
 
 run: build
 	$(BUILD_OUTPUT)
 
 examples: build-examples
 	@echo "running tests..."
-	# ./$(BUILD_EXAMPLES_DIR)/distribution
+	./$(BUILD_EXAMPLES_DIR)/distribution
 	./$(BUILD_EXAMPLES_DIR)/perfomance
 	@echo "finished!"
 

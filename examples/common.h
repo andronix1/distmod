@@ -1,6 +1,6 @@
 #pragma once
 
-#include <distrand.h>
+#include <distmod.h>
 #include <math.h>
 
 #define _STRINGIFY(v) #v
